@@ -8,7 +8,10 @@ export async function fetchArchonData(classParam: string, specParam: string) {
 
   while (retry < retryCount) {
     try {
-      const browser = await puppeteer.launch()
+      const browser = await puppeteer.launch({
+        headless: false,
+        args: ['--disable-features=site-per-process'],
+      })
       const page = await browser.newPage()
       await page.goto(
         `https://www.archon.gg/wow/builds/${specParam}/${classParam}/mythic-plus/gear-and-tier-set/10/all-dungeons/this-week#gear-tables`,
