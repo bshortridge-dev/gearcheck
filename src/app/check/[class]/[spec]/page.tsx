@@ -133,7 +133,7 @@ const SpecPage = () => {
 
           <div>
             <h2 className='text-2xl font-bold mb-4'>
-              Top 3 {specParam} {classParam}`&apos;`s from Raider.io
+              Top 3 {specParam} {classParam}&apos;s from Raider.io
             </h2>
             {/* {showFetchCharactersButton && !loading && (
               <button
