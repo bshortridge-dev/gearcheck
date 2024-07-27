@@ -11,6 +11,7 @@ export default function Specmenu() {
               <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
                 Death Knight
               </summary>
+
               <ul>
                 <li>
                   <Link href={'/check/death-knight/blood'}>Blood</Link>
