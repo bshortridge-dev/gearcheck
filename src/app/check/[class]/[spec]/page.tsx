@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @next/next/no-img-element */
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
@@ -107,9 +105,12 @@ const SpecPage = () => {
   }
 
   useEffect(() => {
+    setLoading(true)
+    setArchonLoading(true)
     const timeoutId = setTimeout(() => {
       fetchArchonData()
-    }, 3000) // Delay fetching Archon data by 5 seconds
+      fetchCharacters()
+    }, 2000) // Delay fetching Archon data by 5 seconds
 
     return () => clearTimeout(timeoutId) // Cleanup the timeout if the component unmounts
   }, [classParam, specParam])
@@ -167,42 +168,44 @@ const SpecPage = () => {
                   </button>
                 </div>
               )}
-              {Object.keys(archonData).length > 0 ? (
-                Object.entries(archonData).map(([key, category]) => (
-                  <div key={key} className='mb-8'>
-                    <h3 className='text-xl font-semibold mb-4'>
-                      {category.categoryName}
-                    </h3>
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                      {category.items.map((item: ArchonItem, index: number) => (
-                        <div
-                          key={index}
-                          className='bg-base-200 p-4 rounded-lg shadow'
-                        >
-                          <div className='flex items-center mb-2'>
-                            <img
-                              src={item.itemIcon}
-                              alt={item.name}
-                              className='w-8 h-8 mr-2'
-                            />
-                            <a
-                              href={`${item.href}`}
-                              className='text-blue-500 hover:underline'
-                              target='_blank'
-                              rel='noopener noreferrer'
-                            >
-                              {item.name}
-                            </a>
-                          </div>
-                          <p>Highest Key Timed: {item.maxKey}</p>
-                          <p>Popularity: {item.popularity}</p>
+              {
+                Object.keys(archonData).length > 0
+                  ? Object.entries(archonData).map(([key, category]) => (
+                      <div key={key} className='mb-8'>
+                        <h3 className='text-xl font-semibold mb-4'>
+                          {category.categoryName}
+                        </h3>
+                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                          {category.items.map(
+                            (item: ArchonItem, index: number) => (
+                              <div
+                                key={index}
+                                className='bg-base-200 p-4 rounded-lg shadow'
+                              >
+                                <div className='flex items-center mb-2'>
+                                  <img
+                                    src={item.itemIcon}
+                                    alt={item.name}
+                                    className='w-8 h-8 mr-2'
+                                  />
+                                  <a
+                                    href={`${item.href}`}
+                                    className='text-blue-500 hover:underline'
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                  >
+                                    {item.name}
+                                  </a>
+                                </div>
+                                <p>Highest Key Timed: {item.maxKey}</p>
+                                <p>Popularity: {item.popularity}</p>
+                              </div>
+                            ),
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <span className='loading loading-dots loading-lg'></span>
+                      </div>
+                    ))
+                  : ''
                 // <div className='text-center'>
                 //   <p>No gear data available.</p>
                 //   <button
@@ -212,21 +215,21 @@ const SpecPage = () => {
                 //     Retry fetching gear.
                 //   </button>
                 // </div>
-              )}
+              }
             </>
           )}
           <div>
             <h2 className='text-2xl font-bold mb-4'>
               Top 3 {capSpecParam} {capClassParam}'s from Raider.io
             </h2>
-            {showFetchCharactersButton && !loading && (
+            {/* {showFetchCharactersButton && !loading && (
               <button
                 onClick={fetchCharacters}
                 className='btn btn-primary mb-4'
               >
                 Get Players
-              </button>
-            )}
+              </button> */}
+            {/* )} */}
             {loading && (
               <span className='loading loading-dots loading-lg'></span>
             )}
