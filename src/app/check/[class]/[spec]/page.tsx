@@ -48,105 +48,31 @@ interface ArchonData {
 const SpecPage = () => {
   const { class: classParam, spec: specParam } = useParams()
   const [characters, setCharacters] = useState<Character[]>([])
-  const [loading, setLoading] = useState(false)
-  const [wowheadData, setWowheadData] = useState<WowheadItem[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(null)
   const [archonData, setArchonData] = useState<ArchonItem[]>([])
-  const [archonLoading, setArchonLoading] = useState(false)
-  const [archonError, setArchonError] = useState<string | null>(null)
-  const [showFetchCharactersButton, setShowFetchCharactersButton] =
-    useState(true)
-
-  // Call Archon API endpoint with the class and spec parameters
-  const fetchArchonData = async () => {
-    setArchonLoading(true)
-    setArchonError(null)
-    try {
-      const response = await fetch('/api/archon', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ spec: specParam, class: classParam }),
-      })
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
-      setArchonData(data)
-    } catch (error: any) {
-      console.error('Error fetching Archon data:', error)
-      setArchonError(error.message)
-    } finally {
-      setArchonLoading(false)
-    }
-  }
-
-  // Call the scrape API endpoint with the class and spec parameters
-  const fetchCharacters = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch('/api/rio', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ class: classParam, spec: specParam }),
-      })
-      const data = await response.json()
-      setCharacters(data.characters)
-      setShowFetchCharactersButton(false) // Hide the button after fetching characters
-    } catch (error) {
-      console.error('Error fetching characters:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setLoading(true)
-    setArchonLoading(true)
-    const timeoutId = setTimeout(() => {
-      fetchArchonData()
-      fetchCharacters()
-    }, 2000) // Delay fetching Archon data by 5 seconds
-
-    return () => clearTimeout(timeoutId) // Cleanup the timeout if the component unmounts
-  }, [classParam, specParam])
-  async function fetchWowheadData() {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const response = await fetch('/api/wh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ class: classParam, spec: specParam }), // Example values
-      })
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          `/api/getData?class=${classParam}&spec=${specParam}`,
+        )
+        if (!response.ok) {
+          throw new Error('Failed to fetch data')
+        }
+        const data = await response.json()
+        setCharacters(data.characters)
+        setArchonData(data.archonData)
+      } catch (error) {
+        setError('An error occurred while fetching data')
+      } finally {
+        setLoading(false)
       }
-      const data = await response.json()
-      setWowheadData(data)
-    } catch (error: any) {
-      console.error('Error fetching Wowhead data:', error)
-      setError(error.message)
-    } finally {
-      setIsLoading(false)
     }
-  }
 
-  const capSpecParam = (specParam as string)
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-  const capClassParam = (classParam as string)
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-    .replace('-', ' ')
+    fetchData()
+  }, [classParam, specParam])
 
   return (
     <div className='grid grid-cols-1 lg:grid-cols-4 gap-3 p-3 w-full h-screen justify-center bg-base-100'>
@@ -154,73 +80,59 @@ const SpecPage = () => {
       <div className='lg:col-span-3 p-5 mx-4 rounded-box bg-base w-full'>
         <div className='mt-8'>
           <h2 className='text-2xl font-bold mb-4'>
-            {capSpecParam} {capClassParam} Gear Data
+            {specParam} {classParam} Gear Data
           </h2>
-          {archonLoading ? (
-            <span className='loading loading-dots loading-lg'></span>
-          ) : (
-            <>
-              {archonError && (
-                <div className='text-red-500 mb-4'>
-                  <p>Error: {archonError}</p>
-                  <button onClick={fetchArchonData} className='btn btn-primary'>
-                    Retry Fetching Archon Data
-                  </button>
-                </div>
-              )}
-              {
-                Object.keys(archonData).length > 0
-                  ? Object.entries(archonData).map(([key, category]) => (
-                      <div key={key} className='mb-8'>
-                        <h3 className='text-xl font-semibold mb-4'>
-                          {category.categoryName}
-                        </h3>
-                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                          {category.items.map(
-                            (item: ArchonItem, index: number) => (
-                              <div
-                                key={index}
-                                className='bg-base-200 p-4 rounded-lg shadow'
-                              >
-                                <div className='flex items-center mb-2'>
-                                  <img
-                                    src={item.itemIcon}
-                                    alt={item.name}
-                                    className='w-8 h-8 mr-2'
-                                  />
-                                  <a
-                                    href={`${item.href}`}
-                                    className='text-blue-500 hover:underline'
-                                    target='_blank'
-                                    rel='noopener noreferrer'
-                                  >
-                                    {item.name}
-                                  </a>
-                                </div>
-                                <p>Highest Key Timed: {item.maxKey}</p>
-                                <p>Popularity: {item.popularity}</p>
-                              </div>
-                            ),
-                          )}
+
+          {
+            Object.keys(archonData).length > 0
+              ? Object.entries(archonData).map(([key, category]) => (
+                  <div key={key} className='mb-8'>
+                    <h3 className='text-xl font-semibold mb-4'>
+                      {category.categoryName}
+                    </h3>
+                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                      {category.items.map((item: ArchonItem, index: number) => (
+                        <div
+                          key={index}
+                          className='bg-base-200 p-4 rounded-lg shadow'
+                        >
+                          <div className='flex items-center mb-2'>
+                            <img
+                              src={item.itemIcon}
+                              alt={item.name}
+                              className='w-8 h-8 mr-2'
+                            />
+                            <a
+                              href={`${item.href}`}
+                              className='text-blue-500 hover:underline'
+                              target='_blank'
+                              rel='noopener noreferrer'
+                            >
+                              {item.name}
+                            </a>
+                          </div>
+                          <p>Highest Key Timed: {item.maxKey}</p>
+                          <p>Popularity: {item.popularity}</p>
                         </div>
-                      </div>
-                    ))
-                  : ''
-                // <div className='text-center'>
-                //   <p>No gear data available.</p>
-                //   <button
-                //     onClick={fetchArchonData}
-                //     className='btn btn-primary mt-4'
-                //   >
-                //     Retry fetching gear.
-                //   </button>
-                // </div>
-              }
-            </>
-          )}
+                      ))}
+                    </div>
+                  </div>
+                ))
+              : ''
+            // <div className='text-center'>
+            //   <p>No gear data available.</p>
+            //   <button
+            //     onClick={fetchArchonData}
+            //     className='btn btn-primary mt-4'
+            //   >
+            //     Retry fetching gear.
+            //   </button>
+            // </div>
+          }
+
           <div>
             <h2 className='text-2xl font-bold mb-4'>
-              Top 3 {capSpecParam} {capClassParam}'s from Raider.io
+              Top 3 {specParam} {classParam}'s from Raider.io
             </h2>
             {/* {showFetchCharactersButton && !loading && (
               <button
