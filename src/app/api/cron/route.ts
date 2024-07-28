@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import { fetchArchonData, fetchCharacters } from '../../lib/dataFetchers'
 
 const prisma = new PrismaClient()
+export const dynamic = 'force-dynamic' // Force dynamic (server) route instead of static page
 
 export async function GET() {
   try {
