@@ -7,6 +7,11 @@ export const dynamic = 'force-dynamic' // Force dynamic (server) route instead o
 
 export async function GET() {
   try {
+    // Drop all rows in the archonGear table
+    await prisma.archonGear.deleteMany()
+
+    // Drop all rows in the character table
+    await prisma.character.deleteMany()
     // Fetch data for all class/spec combinations
     const classSpecs = [
       { class: 'warrior', spec: 'arms' },
@@ -55,7 +60,8 @@ export async function GET() {
     for (const { class: classParam, spec: specParam } of classSpecs) {
       const archonData = await fetchArchonData(classParam, specParam)
       const characters = await fetchCharacters(classParam, specParam)
-
+      const className = classParam
+      const classSpec = specParam
       // Store Archon data
       for (const category of Object.values(archonData)) {
         for (const item of category.items) {
@@ -67,7 +73,10 @@ export async function GET() {
               maxKey: item.maxKey,
               popularity: item.popularity,
               itemIcon: item.itemIcon,
-              classSpec: `${specParam}-${classParam}`,
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              className: className,
+              classSpec: classSpec,
             },
           })
         }
@@ -82,12 +91,16 @@ export async function GET() {
               link: character.link,
               charRealm: character.charRealm,
               combinedData: character.combinedData,
-              classSpec: `${specParam}-${classParam}`,
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              className: className,
+              classSpec: classSpec,
             },
           })
         }
       }
     }
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Cron job error:', error)

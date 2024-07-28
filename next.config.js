@@ -2,5 +2,5 @@
 module.exports = {
   // time in seconds of no pages generating during static
   // generation before timing out
-  staticPageGenerationTimeout: 600000,
+  staticPageGenerationTimeout: 1000000,
 };

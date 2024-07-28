@@ -97,7 +97,7 @@ export default function Specmenu() {
                   <Link href={'/check/shaman/elemental'}>Elemental</Link>
                 </li>
                 <li>
-                  <Link href={'/check/shaman/Enhancement'}>Enhancement</Link>
+                  <Link href={'/check/shaman/enhancement'}>Enhancement</Link>
                 </li>
                 <li>
                   <Link href={'/check/shaman/restoration'}>Restoration</Link>
@@ -116,10 +116,10 @@ export default function Specmenu() {
                   <Link href={'/check/druid/feral'}>Feral</Link>
                 </li>
                 <li>
-                  <Link href={'/check/druid/restoration'}>Restoration</Link>
+                  <Link href={'/check/druid/guardian'}>Guardian</Link>
                 </li>
                 <li>
-                  <Link href={'/check/druid/Restoration'}>Restoration</Link>
+                  <Link href={'/check/druid/restoration'}>Restoration</Link>
                 </li>
               </ul>
             </details>
@@ -164,7 +164,7 @@ export default function Specmenu() {
                   <Link href={'/check/evoker/devastation'}>Devastation</Link>
                 </li>
                 <li>
-                  <Link href={'/check/evoker/augmentation'}>Aumentation</Link>
+                  <Link href={'/check/evoker/augmentation'}>Augmentation</Link>
                 </li>
                 <li>
                   <Link href={'/check/evoker/preservation'}>Preservation</Link>

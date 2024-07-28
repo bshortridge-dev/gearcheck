@@ -5,18 +5,16 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  url = env("POSTGRES_URL") // uses connection pooling
 }
-
 model Character {
   id            Int      @id @default(autoincrement())
   name          String
   link          String
   charRealm     String
   combinedData  String
-  classSpec     String
-  className     String
+  className     String  // Changed from 'class'
+  classSpec      String  // Changed from 'spec'
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -29,8 +27,8 @@ model ArchonGear {
   maxKey        String
   popularity    String
   itemIcon      String
-  className     String
-  classSpec     String
+  className     String  // Changed from 'class'
+  classSpec      String  // Changed from 'spec'
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

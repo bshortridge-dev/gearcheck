@@ -1,8 +1,8 @@
 import puppeteer from 'puppeteer'
 import cheerio from 'cheerio'
 
-export async function fetchArchonData(classParam: string, specParam: string) {
-  const retryCount = 5 // Number of times to retry
+export async function fetchArchonData(className: string, classSpec: string) {
+  const retryCount = 3 // Number of times to retry
   let retry = 0
   let gearCategories: { [key: string]: any } = {}
 
@@ -14,8 +14,12 @@ export async function fetchArchonData(classParam: string, specParam: string) {
       })
       const page = await browser.newPage()
       await page.goto(
-        `https://www.archon.gg/wow/builds/${specParam}/${classParam}/mythic-plus/gear-and-tier-set/10/all-dungeons/this-week#gear-tables`,
+        `https://www.archon.gg/wow/builds/${classSpec}/${className}/mythic-plus/gear-and-tier-set/10/all-dungeons/this-week#gear-tables`,
       )
+
+      // Add a delay of 5 seconds before closing the browser
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
       const html = await page.content()
       await browser.close()
       const $ = cheerio.load(html)
@@ -79,13 +83,15 @@ export async function fetchArchonData(classParam: string, specParam: string) {
 
       retry++
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error fetching data:', error)
       retry++
     }
   }
 
   return gearCategories
 }
+
+// Fetches character data for the given class and spec from raider.io
 export async function fetchCharacters(classParam: string, specParam: string) {
   try {
     const browser = await puppeteer.launch()
@@ -98,6 +104,83 @@ export async function fetchCharacters(classParam: string, specParam: string) {
     await browser.close()
 
     const $ = cheerio.load(html)
+
+    if (classParam === 'rogue') {
+      const charNames = $('a.class-color--4')
+        .map((index, element) => $(element).text())
+        .get()
+        .slice(0, 3)
+
+      const charRealm = $(
+        'div.slds-tile__detail.slds-text-body--small a.rio-realm-link',
+      )
+        .map((index, element) => {
+          const realmText = $(element).text().trim()
+
+          const matchResult = realmText.match(/\((.*?)\) (.*)/)
+          if (matchResult) {
+            const [locale, realmName] = matchResult.slice(1, 3)
+
+            return { locale, realmName }
+          } else {
+            console.log('No match found')
+            return null
+          }
+        })
+        .get()
+        .slice(0, 3)
+
+        .filter(item => item !== null)
+
+      const characters = await Promise.all(
+        charNames.map(async (name, index) => {
+          const { locale, realmName } = charRealm[index]
+
+          const modifiedRealmName = realmName.toLowerCase().replace(/\s/g, '-')
+
+          const link = `https://raider.io/characters/${locale}/${realmName}/${name}`
+
+          const browser = await puppeteer.launch()
+          const page = await browser.newPage()
+          await page.goto(link)
+
+          const hrefData = await page.evaluate(() => {
+            const hrefElements = Array.from(
+              document.querySelectorAll('a[data-wh-rename-link="false"]'),
+            )
+            return hrefElements.map(element => element.getAttribute('href'))
+          })
+
+          const srcLinks = await page.evaluate(() => {
+            const imgElements = Array.from(
+              document.querySelectorAll(
+                'img.rio-wow-icon.rio-wow-icon--shape-square.rio-wow-icon--medium',
+              ),
+            )
+            return imgElements.map(element => element.getAttribute('src'))
+          })
+
+          const combinedData = hrefData.map((href, index) => {
+            return {
+              href,
+              src: srcLinks[index],
+            }
+          })
+          await browser.close()
+
+          return {
+            name,
+            link,
+            charRealm: JSON.stringify({ locale, realmName: modifiedRealmName }),
+            combinedData: JSON.stringify(combinedData),
+          }
+        }),
+      )
+
+      console.log(characters)
+
+      return characters
+    }
 
     if (classParam === 'demon-hunter') {
       const charNames = $('a.class-color--12')

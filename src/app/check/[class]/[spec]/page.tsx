@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities*/
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
@@ -6,58 +5,40 @@ import Specmenu from '../../../components/specmenu'
 
 interface Character {
   name: string
-  class: string
-  spec: string
+  className: string
+  classSpec: string
   link: string
-  realm: string
   charRealm: string
   combinedData: string
-  equipped_items: {
-    slot: {
-      name: string
-    }
-    item: {
-      id: number
-      name: string
-    }
-  }[]
-}
-interface WowheadItem {
-  alt: string
-  href: string
 }
 
 interface ArchonItem {
-  name: string
+  categoryName: string
+  itemName: string
   href: string
   maxKey: string
   popularity: string
   itemIcon: string
-  categoryName: string
-  category: string
-  items: []
-}
-
-interface ArchonCategory {
-  items: ArchonItem[]
-  categoryName: string
-}
-
-interface ArchonData {
-  [key: string]: ArchonCategory
+  className: string
+  classSpec: string
 }
 
 const SpecPage = () => {
-  const { class: classParam, spec: specParam } = useParams()
+  const { class: className, spec: classSpec } = useParams<{
+    class: string
+    spec: string
+  }>()
   const [characters, setCharacters] = useState<Character[]>([])
   const [archonData, setArchonData] = useState<ArchonItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const classSpec = `${specParam}-${classParam}`
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`/api/getData?classSpec=${classSpec}`)
+        const response = await fetch(
+          `/api/getData?class=${className}&spec=${classSpec}`,
+        )
         if (!response.ok) {
           throw new Error('Failed to fetch data')
         }
@@ -72,7 +53,17 @@ const SpecPage = () => {
     }
 
     fetchData()
-  }, [])
+  }, [className, classSpec])
+
+  // Group archonData by categoryName
+  const groupedArchonData = archonData.reduce((acc, item) => {
+    if (!acc[item.categoryName]) {
+      acc[item.categoryName] = []
+    }
+    acc[item.categoryName].push(item)
+    return acc
+  }, {} as Record<string, ArchonItem[]>)
+  const reversedGroupedArchonData = Object.entries(groupedArchonData).reverse()
 
   return (
     <div className='grid grid-cols-1 lg:grid-cols-4 gap-3 p-3 w-full h-screen justify-center bg-base-100'>
@@ -80,74 +71,84 @@ const SpecPage = () => {
       <div className='lg:col-span-3 p-5 mx-4 rounded-box bg-base w-full'>
         <div className='mt-8'>
           <h2 className='text-2xl font-bold mb-4'>
-            {specParam} {classParam} Gear Data
+            {`${classSpec
+              .replace(/-/g, ' ')
+              .split(' ')
+              .map((word, index) => {
+                if (index === 0) {
+                  return word.charAt(0).toUpperCase() + word.slice(1)
+                } else if (index === 1) {
+                  return (
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                  )
+                } else {
+                  return word
+                }
+              })
+              .join(' ')} ${className.charAt(0).toUpperCase()}${className.slice(
+              1,
+            )} Gear Data`}
           </h2>
 
-          {
-            Object.keys(archonData).length > 0
-              ? Object.entries(archonData).map(([key, category]) => (
-                  <div key={key} className='mb-8'>
-                    <h3 className='text-xl font-semibold mb-4'>
-                      {category.categoryName}
-                    </h3>
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                      {category.items.map((item: ArchonItem, index: number) => (
-                        <div
-                          key={index}
-                          className='bg-base-200 p-4 rounded-lg shadow'
-                        >
-                          <div className='flex items-center mb-2'>
-                            <img
-                              src={item.itemIcon}
-                              alt={item.name}
-                              className='w-8 h-8 mr-2'
-                            />
-                            <a
-                              href={`${item.href}`}
-                              className='text-blue-500 hover:underline'
-                              target='_blank'
-                              rel='noopener noreferrer'
-                            >
-                              {item.name}
-                            </a>
-                          </div>
-                          <p>Highest Key Timed: {item.maxKey}</p>
-                          <p>Popularity: {item.popularity}</p>
-                        </div>
-                      ))}
+          {reversedGroupedArchonData.map(([categoryName, items]) => (
+            <div key={categoryName} className='mb-8'>
+              <h3 className='text-xl font-semibold mb-4'>{categoryName}</h3>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                {items.map((item, index) => (
+                  <div
+                    key={index}
+                    className='bg-base-200 p-4 rounded-lg shadow'
+                  >
+                    <div className='flex items-center mb-2'>
+                      <img
+                        src={item.itemIcon}
+                        alt={item.itemName}
+                        className='w-8 h-8 mr-2'
+                      />
+                      <a
+                        href={item.href}
+                        className='text-blue-500 hover:underline'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      >
+                        {item.itemName}
+                      </a>
+                    </div>
+                    <div>
+                      <p>Highest Key Timed: {item.maxKey}</p>
+                      <p>Popularity: {item.popularity}</p>
                     </div>
                   </div>
-                ))
-              : ''
-            // <div className='text-center'>
-            //   <p>No gear data available.</p>
-            //   <button
-            //     onClick={fetchArchonData}
-            //     className='btn btn-primary mt-4'
-            //   >
-            //     Retry fetching gear.
-            //   </button>
-            // </div>
-          }
+                ))}
+              </div>
+            </div>
+          ))}
 
           <div>
             <h2 className='text-2xl font-bold mb-4'>
-              Top 3 {specParam} {classParam}&apos;s from Raider.io
+              Top 3{' '}
+              {`${classSpec
+                .replace(/-/g, ' ')
+                .split(' ')
+                .map((word, index) => {
+                  if (index === 0) {
+                    return word.charAt(0).toUpperCase() + word.slice(1)
+                  } else if (index === 1) {
+                    return (
+                      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    )
+                  } else {
+                    return word
+                  }
+                })
+                .join(' ')} ${className
+                .charAt(0)
+                .toUpperCase()}${className.slice(1)} Raider.io Characters`}
             </h2>
-            {/* {showFetchCharactersButton && !loading && (
-              <button
-                onClick={fetchCharacters}
-                className='btn btn-primary mb-4'
-              >
-                Get Players
-              </button> */}
-            {/* )} */}
             {loading && (
               <span className='loading loading-dots loading-lg'></span>
             )}
-            {loading ? (
-              ''
-            ) : (
+            {!loading && (
               <div className='characters-container'>
                 {characters.map(({ name, link, charRealm, combinedData }) => {
                   const parsedCharRealm = JSON.parse(charRealm)
@@ -163,7 +164,7 @@ const SpecPage = () => {
                         {JSON.parse(combinedData).map(
                           (
                             charData: { href: string; src: string },
-                            index: React.Key | null | undefined,
+                            index: number,
                           ) => (
                             <div className='flex' key={index}>
                               <a href={`https:${charData.href}`}>
@@ -173,7 +174,7 @@ const SpecPage = () => {
                                   alt={name}
                                   width={36}
                                   height={36}
-                                ></img>
+                                />
                               </a>
                             </div>
                           ),
@@ -187,24 +188,6 @@ const SpecPage = () => {
           </div>
         </div>
       </div>
-
-      {/* <div className='lg:col-span-3 p-5 mx-4 rounded-box bg-base w-full'>
-        <button onClick={fetchWowheadData} disabled={isLoading}>
-          {isLoading ? 'Fetching...' : 'Fetch Wowhead Data'}
-        </button>
-        {error && <p>Error: {error}</p>}
-        {wowheadData.length > 0 ? (
-          <ul>
-            {wowheadData.map((item, index) => (
-              <li key={index}>
-                <a href={`https://www.wowhead.com${item.href}`}>{item.alt}</a>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No Wowhead data available. Click the button to fetch.</p>
-        )}
-      </div> */}
     </div>
   )
 }

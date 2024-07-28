@@ -5,10 +5,10 @@ const prisma = new PrismaClient()
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const classParam = searchParams.get('class')
-  const specParam = searchParams.get('spec')
+  const className = searchParams.get('class')
+  const classSpec = searchParams.get('spec')
 
-  if (!classParam || !specParam) {
+  if (!className || !classSpec) {
     return NextResponse.json(
       { error: 'Missing class or spec parameter' },
       { status: 400 },
@@ -16,19 +16,28 @@ export async function GET(request: Request) {
   }
 
   try {
-    const classSpec = `${specParam}-${classParam}`
-
     const characters = await prisma.character.findMany({
-      where: { classSpec },
-      orderBy: { updatedAt: 'desc' },
+      where: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        className: className,
+        classSpec: classSpec,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
       take: 3,
     })
 
     const archonData = await prisma.archonGear.findMany({
-      where: { classSpec },
-      orderBy: { updatedAt: 'desc' },
-      include: {
-        category: true,
+      where: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        className: className,
+        classSpec: classSpec,
+      },
+      orderBy: {
+        updatedAt: 'desc',
       },
     })
 
