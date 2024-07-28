@@ -64,13 +64,6 @@ const SpecPage = () => {
     return acc
   }, {} as Record<string, ArchonItem[]>)
 
-  // Sort items in each category by popularity
-  Object.keys(groupedArchonData).forEach(key => {
-    groupedArchonData[key] = sortByPopularity(groupedArchonData[key])
-  })
-
-  const reversedGroupedArchonData = Object.entries(groupedArchonData).reverse()
-
   const sortByPopularity = (items: ArchonItem[]) => {
     return items.sort((a, b) => {
       const popularityA = parseFloat(a.popularity)
@@ -78,13 +71,15 @@ const SpecPage = () => {
       return popularityB - popularityA
     })
   }
+  // Sort items in each category by popularity
+  Object.keys(groupedArchonData).forEach(key => {
+    groupedArchonData[key] = sortByPopularity(groupedArchonData[key])
+  })
+
+  const reversedGroupedArchonData = Object.entries(groupedArchonData).reverse()
 
   return (
-    <div
-      className='grid grid-cols-1 lg:grid-cols-
-    
-    4 gap-3 p-3 w-full h-screen justify-center bg-base-100'
-    >
+    <div className='grid grid-cols-1 lg:grid-cols-4 gap-3 p-3 w-full h-screen justify-center bg-base-100'>
       <Specmenu />
       <div className='lg:col-span-3 p-5 mx-4 rounded-box bg-base w-full'>
         <div className='mt-8'>
