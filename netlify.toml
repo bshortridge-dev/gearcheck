@@ -1,2 +1,2 @@
 [build]
-  ignore = "node_modules/@prisma/client"
+  ignore = "node_modules/.prisma/client"
