@@ -14,9 +14,9 @@ export default async function Navbar() {
       <div className='flex-none'>
         <ul className='menu menu-horizontal px-1'>
           <li>
-            <Link href='/profile'>SignIn/Profile</Link>
+            <Link href='/profile'>Check Gear</Link>
           </li>
-          <li>
+          {/* <li>
             <details>
               <summary className='dropdown-open'>⚙️ Settings</summary>
               <ul className=' bg-base-100 rounded-t-none p-2'>
@@ -26,7 +26,7 @@ export default async function Navbar() {
                 <li>Logout</li>
               </ul>
             </details>
-          </li>
+          </li> */}
         </ul>
       </div>
     </div>

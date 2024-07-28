@@ -73,7 +73,6 @@ export async function GET() {
               maxKey: item.maxKey,
               popularity: item.popularity,
               itemIcon: item.itemIcon,
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-ignore
               className: className,
               classSpec: classSpec,
@@ -91,7 +90,6 @@ export async function GET() {
               link: character.link,
               charRealm: character.charRealm,
               combinedData: character.combinedData,
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
               // @ts-ignore
               className: className,
               classSpec: classSpec,

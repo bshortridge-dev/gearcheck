@@ -18,7 +18,6 @@ export async function GET(request: Request) {
   try {
     const characters = await prisma.character.findMany({
       where: {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         className: className,
         classSpec: classSpec,
@@ -31,7 +30,6 @@ export async function GET(request: Request) {
 
     const archonData = await prisma.archonGear.findMany({
       where: {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         className: className,
         classSpec: classSpec,
