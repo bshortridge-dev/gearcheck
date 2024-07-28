@@ -1,6 +1,5 @@
 [build]
   ignore = "node_modules/.prisma/client"
-  [[build]]
   command = "npm run build"
   # Clear the cache before starting the build
   environment = { NODE_OPTIONS = "--clear-cache" }
