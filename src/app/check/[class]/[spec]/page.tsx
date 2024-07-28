@@ -34,6 +34,7 @@ interface ArchonItem {
   popularity: string
   itemIcon: string
   categoryName: string
+  category: string
   items: []
 }
 
@@ -52,13 +53,11 @@ const SpecPage = () => {
   const [archonData, setArchonData] = useState<ArchonItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
+  const classSpec = `${specParam}-${classParam}`
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          `/api/getData?class=${classParam}&spec=${specParam}`,
-        )
+        const response = await fetch(`/api/getData?classSpec=${classSpec}`)
         if (!response.ok) {
           throw new Error('Failed to fetch data')
         }
@@ -73,7 +72,7 @@ const SpecPage = () => {
     }
 
     fetchData()
-  }, [classParam, specParam])
+  }, [])
 
   return (
     <div className='grid grid-cols-1 lg:grid-cols-4 gap-3 p-3 w-full h-screen justify-center bg-base-100'>

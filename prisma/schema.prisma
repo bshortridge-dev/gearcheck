@@ -16,6 +16,7 @@ model Character {
   charRealm     String
   combinedData  String
   classSpec     String
+  className     String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -28,6 +29,7 @@ model ArchonGear {
   maxKey        String
   popularity    String
   itemIcon      String
+  className     String
   classSpec     String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
