@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       // Map each element to its text
       .map((index, element) => $(element).text())
       .get()
-      .slice(0, 3) // Take the first 10 character names
+      .slice(0, 3) // Take the       first 10 character names
 
     // Step 2: Get the parsed character realms
     const charRealm = $(
