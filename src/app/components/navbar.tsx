@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default async function Navbar() {
   return (
-    <div className='navbar bg-base-300 max-w-sreen'>
+    <div className='navbar bg-base-300 max-w-screen h-14'>
       <div className='flex-1'>
         <Link
           href={'/'}
@@ -14,7 +14,7 @@ export default async function Navbar() {
       <div className='flex-none'>
         <ul className='menu menu-horizontal px-1'>
           <li>
-            <Link href='/profile'>Check Gear</Link>
+            <Link href='/check'>About</Link>
           </li>
           {/* <li>
             <details>

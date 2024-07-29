@@ -2,13 +2,15 @@ import Link from 'next/link'
 
 export default function Specmenu() {
   return (
-    <ul className='col-span-4 menu bg-base-300 rounded-box lg:col-span-1'>
+    <ul className='col-span-4 menu rounded-md bg-base-300 lg:col-span-1 lg:max-w-sm lg:h-[120%] opacity-80 lg:-mb-28'>
       <li>
         <details>
-          <summary>Choose your Class</summary>
+          <summary className='font-bold text-accent text-lg'>
+            Choose your Class
+          </summary>
           <ul>
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-red-500  hover:font-bold hover:cursor-pointer'>
                 Death Knight
               </summary>
 
@@ -26,7 +28,7 @@ export default function Specmenu() {
             </details>
 
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-yellow-300 hover:font-bold hover:cursor-pointer'>
                 Rogue
               </summary>
               <ul>
@@ -43,7 +45,7 @@ export default function Specmenu() {
             </details>
 
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-teal-300 hover:font-bold hover:cursor-pointer'>
                 Mage
               </summary>
               <ul>
@@ -60,7 +62,7 @@ export default function Specmenu() {
             </details>
 
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-purple-600 hover:font-bold hover:cursor-pointer'>
                 Demon Hunter
               </summary>
               <ul>
@@ -73,7 +75,7 @@ export default function Specmenu() {
               </ul>
             </details>
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-green-300 hover:font-bold hover:cursor-pointer'>
                 Monk
               </summary>
               <ul>
@@ -89,7 +91,7 @@ export default function Specmenu() {
               </ul>
             </details>
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1  hover:text-blue-500 hover:font-bold hover:cursor-pointer'>
                 Shaman
               </summary>
               <ul>
@@ -105,7 +107,7 @@ export default function Specmenu() {
               </ul>
             </details>
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-orange-600 hover:font-bold hover:cursor-pointer'>
                 Druid
               </summary>
               <ul>
@@ -124,7 +126,7 @@ export default function Specmenu() {
               </ul>
             </details>
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-pink-300 hover:font-bold hover:cursor-pointer'>
                 Paladin
               </summary>
               <ul>
@@ -140,7 +142,7 @@ export default function Specmenu() {
               </ul>
             </details>
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-purple-300 hover:font-bold hover:cursor-pointer'>
                 Warlock
               </summary>
               <ul>
@@ -156,7 +158,7 @@ export default function Specmenu() {
               </ul>
             </details>
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-green-600 hover:font-bold hover:cursor-pointer'>
                 Evoker
               </summary>
               <ul>
@@ -172,7 +174,7 @@ export default function Specmenu() {
               </ul>
             </details>
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-white-300 hover:font-bold hover:cursor-pointer'>
                 Priest
               </summary>
               <ul>
@@ -188,7 +190,7 @@ export default function Specmenu() {
               </ul>
             </details>
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-yellow-900 hover:font-bold hover:cursor-pointer'>
                 Warrior
               </summary>
               <ul>
@@ -204,7 +206,7 @@ export default function Specmenu() {
               </ul>
             </details>
             <details>
-              <summary className='p-1 hover:text-secondary hover:cursor-pointer'>
+              <summary className='p-1 hover:text-lime-500 hover:font-bold hover:cursor-pointer'>
                 Hunter
               </summary>
               <ul>

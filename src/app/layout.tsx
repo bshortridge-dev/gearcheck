@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='en' data-theme='forest'>
+    <html lang='en' data-theme='dim'>
       <head>
         <Script
           src='https://wow.zamimg.com/js/tooltips.js'
@@ -26,7 +26,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <Navbar />
-        <main className='flex flex-col items-center justify-center min-h-screen'>
+        <main className='flex flex-col items-center justify-center bg-base-100 min-h-screen overflow-x-hidden'>
           {children}
         </main>
       </body>
