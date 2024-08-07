@@ -117,6 +117,18 @@ const SpecPage = () => {
 
   return (
     <div className='relative min-h-screen w-full bg-base-100'>
+      <Script
+        src='https://wow.zamimg.com/widgets/power.js'
+        strategy='beforeInteractive'
+        onLoad={() => {
+          if (
+            window.$WowheadPower &&
+            typeof window.$WowheadPower.refreshLinks === 'function'
+          ) {
+            window.$WowheadPower.refreshLinks()
+          }
+        }}
+      />
       {/* Background image */}
       <div
         className='fixed inset-0 bg-cover bg-center opacity-40 mt-16'
