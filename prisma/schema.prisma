@@ -32,3 +32,16 @@ model ArchonGear {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model whBestGear {
+  id            Int      @id @default(autoincrement())
+  itemSlot      String
+  itemName      String
+  itemLink      String?  // Made optional
+  sourceName    String
+  sourceLink    String? // Made optional
+  className     String
+  classSpec     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

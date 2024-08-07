@@ -2,12 +2,10 @@ import Link from 'next/link'
 
 export default function Specmenu() {
   return (
-    <ul className='col-span-4 menu rounded-md bg-base-300 lg:col-span-1 lg:max-w-sm lg:h-[120%] opacity-80 lg:-mb-28'>
+    <ul className='col-span-4 menu  rounded-md bg-base-300 lg:col-span-1 lg:max-w-sm lg:h-[120%] opacity-80 lg:-mb-28'>
       <li>
         <details>
-          <summary className='font-bold text-accent text-lg'>
-            Choose your Class
-          </summary>
+          <summary className='font-bold text-lg'>Choose your Class</summary>
           <ul>
             <details>
               <summary className='p-1 hover:text-red-500  hover:font-bold hover:cursor-pointer'>

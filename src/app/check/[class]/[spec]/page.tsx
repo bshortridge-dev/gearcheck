@@ -22,6 +22,15 @@ interface ArchonItem {
   className: string
   classSpec: string
 }
+interface WhBestGearItem {
+  itemSlot: string
+  itemName: string
+  sourceName: string
+  className: string
+  classSpec: string
+  itemLink: string
+  sourceLink?: string // Optional, as it might not always be available
+}
 
 const SpecPage = () => {
   const { class: className, spec: classSpec } = useParams<{
@@ -32,7 +41,29 @@ const SpecPage = () => {
   const [archonData, setArchonData] = useState<ArchonItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [whBestGear, setWhBestGear] = useState<WhBestGearItem[]>([])
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          `/api/getData?class=${className}&spec=${classSpec}`,
+        )
+        if (!response.ok) {
+          throw new Error('Failed to fetch data')
+        }
+        const data = await response.json()
+        setCharacters(data.characters)
+        setArchonData(data.archonData)
+        setWhBestGear(data.whBestGear) // Add this line
+      } catch (error) {
+        setError('An error occurred while fetching data')
+      } finally {
+        setLoading(false)
+      }
+    }
 
+    fetchData()
+  }, [className, classSpec])
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -102,6 +133,114 @@ const SpecPage = () => {
             </p>
           </p>
           {/* start collapse cards */}
+          <div className='collapse collapse-arrow rounded-md bg-base-200 opacity-90 mb-2'>
+            <input type='checkbox' />
+            <div className='collapse-title text-xl font-medium'>
+              <h2 className='text-2xl font-bold mb-4'>
+                {`${classSpec
+                  .replace(/-/g, ' ')
+                  .split(' ')
+                  .map((word, index) => {
+                    if (index === 0) {
+                      return word.charAt(0).toUpperCase() + word.slice(1)
+                    } else if (index === 1) {
+                      return (
+                        word.charAt(0).toUpperCase() +
+                        word.slice(1).toLowerCase()
+                      )
+                    } else {
+                      return word
+                    }
+                  })
+                  .join(' ')} ${className
+                  .replace(/-/g, ' ')
+                  .split(' ')
+                  .map((word, index) => {
+                    if (index === 0) {
+                      return word.charAt(0).toUpperCase() + word.slice(1)
+                    } else if (index === 1) {
+                      return (
+                        word.charAt(0).toUpperCase() +
+                        word.slice(1).toLowerCase()
+                      )
+                    } else {
+                      return word
+                    }
+                  })
+                  .join(' ')} Wowhead BiS`}
+              </h2>
+            </div>
+            <div className='collapse-content'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                {[
+                  'head',
+                  'neck',
+                  'shoulders',
+                  'cloak',
+                  'chest',
+                  'wrist',
+                  'gloves',
+                  'belt',
+                  'legs',
+                  'feet',
+                  'ring',
+                  'trinket',
+                  'main hand',
+                  'off hand',
+                ].map(slot => {
+                  const items = whBestGear.filter(
+                    i => i.itemSlot.toLowerCase() === slot,
+                  )
+                  const uniqueItems = items.filter(
+                    (item, index, self) =>
+                      index ===
+                      self.findIndex(t => t.itemName === item.itemName),
+                  )
+
+                  return uniqueItems.map((item, index) => (
+                    <div
+                      key={`${slot}-${index}`}
+                      className='bg-base-300 p-4 rounded-lg shadow'
+                    >
+                      <h3 className='text-lg font-semibold mb-2'>
+                        {item.itemSlot}
+                      </h3>
+                      <p>
+                        <strong>Item:</strong>{' '}
+                        <a
+                          href={item.itemLink}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='hover:underline hover:font-semibold'
+                        >
+                          {item.itemName}
+                        </a>
+                      </p>
+                      <p>
+                        <strong>Source:</strong>{' '}
+                        {item.sourceLink ? (
+                          <a
+                            href={item.sourceLink}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='hover:underline hover:font-semibold'
+                          >
+                            {item.sourceName.replace(
+                              /Catalyst(?!:)/,
+                              'Catalyst: ',
+                            )}
+                          </a>
+                        ) : (
+                          item.sourceName.replace(/Catalyst(?!:)/, 'Catalyst: ')
+                        )}
+                      </p>
+                    </div>
+                  ))
+                })}
+              </div>
+            </div>
+          </div>
+
           <div className='collapse collapse-arrow  rounded-md bg-base-200 opacity-90 mb-2'>
             <input type='checkbox' />
             <div className='collapse-title text-xl font-medium'>
@@ -136,7 +275,7 @@ const SpecPage = () => {
                       return word
                     }
                   })
-                  .join(' ')} Gear Data`}
+                  .join(' ')} Log Data`}
               </h2>
             </div>
             <div className='collapse-content'>
