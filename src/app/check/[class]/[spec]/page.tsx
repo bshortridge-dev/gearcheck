@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Specmenu from '../../../components/specmenu'
+import Script from 'next/script'
 
 interface Character {
   name: string
@@ -42,6 +43,39 @@ const SpecPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [whBestGear, setWhBestGear] = useState<WhBestGearItem[]>([])
+  useEffect(() => {
+    // Set the configuration
+
+    window.whTooltips = {
+      colorLinks: false,
+      iconizeLinks: true,
+      renameLinks: true,
+      iconSize: 'medium',
+    }
+
+    // Refresh links if $WowheadPower is available
+
+    if (
+      window.$WowheadPower &&
+      typeof window.$WowheadPower.refreshLinks === 'function'
+    ) {
+      window.$WowheadPower.refreshLinks()
+    }
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (
+        window.$WowheadPower &&
+        typeof window.$WowheadPower.refreshLinks === 'function'
+      ) {
+        window.$WowheadPower.refreshLinks()
+      }
+    }, 1000) // 1 second delay
+
+    return () => clearTimeout(timer)
+  }, [])
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -111,6 +145,20 @@ const SpecPage = () => {
 
   return (
     <div className='relative min-h-screen w-full bg-base-100'>
+      <Script
+        src='https://wow.zamimg.com/js/tooltips.js'
+        strategy='beforeInteractive'
+        onLoad={() => {
+          // Refresh links after script has loaded
+
+          if (
+            window.$WowheadPower &&
+            typeof window.$WowheadPower.refreshLinks === 'function'
+          ) {
+            window.$WowheadPower.refreshLinks()
+          }
+        }}
+      />
       {/* Background image */}
       <div
         className='fixed inset-0 bg-cover bg-center opacity-40 mt-16'
@@ -205,35 +253,39 @@ const SpecPage = () => {
                       <h3 className='text-lg font-semibold mb-2'>
                         {item.itemSlot}
                       </h3>
-                      <p>
-                        <strong>Item:</strong>{' '}
-                        <a
-                          href={item.itemLink}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='hover:underline hover:font-semibold'
-                        >
-                          {item.itemName}
-                        </a>
-                      </p>
-                      <p>
-                        <strong>Source:</strong>{' '}
-                        {item.sourceLink ? (
+                      <div className='grid grid-cols-2 gap-2'>
+                        <div>
                           <a
-                            href={item.sourceLink}
+                            href={item.itemLink}
                             target='_blank'
                             rel='noopener noreferrer'
                             className='hover:underline hover:font-semibold'
                           >
-                            {item.sourceName.replace(
+                            {item.itemName}
+                          </a>
+                        </div>
+                        <div className='text-right pt-2'>
+                          <strong>Source:</strong>{' '}
+                          {item.sourceLink ? (
+                            <a
+                              href={item.sourceLink}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='hover:underline hover:font-semibold'
+                            >
+                              {item.sourceName.replace(
+                                /Catalyst(?!:)/,
+                                'Catalyst: ',
+                              )}
+                            </a>
+                          ) : (
+                            item.sourceName.replace(
                               /Catalyst(?!:)/,
                               'Catalyst: ',
-                            )}
-                          </a>
-                        ) : (
-                          item.sourceName.replace(/Catalyst(?!:)/, 'Catalyst: ')
-                        )}
-                      </p>
+                            )
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))
                 })}
@@ -289,11 +341,11 @@ const SpecPage = () => {
                         className='bg-base-300 p-4 rounded-lg shadow'
                       >
                         <div className='flex items-center mb-2'>
-                          <img
+                          {/* <img
                             src={item.itemIcon}
                             alt={item.itemName}
                             className='mr-2 w-[36px] h-[36px] border-2 border-gray-900 rounded-md'
-                          />
+                          /> */}
                           <a
                             href={item.href}
                             className='hover:underline hover:font-semibold'
@@ -314,7 +366,7 @@ const SpecPage = () => {
               ))}
             </div>
           </div>
-          <div className='collapse collapse-arrow rounded-md opacity-90 bg-base-200'>
+          <div className='collapse collapse-arrow rounded-md bg-base-200 opacity-90 mb-2'>
             <input type='checkbox' />
             <div className='collapse-title text-xl font-medium'>
               <h2 className='text-2xl font-bold mb-4'>
@@ -357,39 +409,39 @@ const SpecPage = () => {
                 <span className='loading loading-dots loading-lg'></span>
               )}
               {!loading && (
-                <div className='characters-container'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   {characters.map(({ name, link, charRealm, combinedData }) => {
                     const parsedCharRealm = JSON.parse(charRealm)
                     const modifiedRealmName = parsedCharRealm.realmName
                       .toLowerCase()
                       .replace(/\s/g, '-')
                     return (
-                      <div className='pb-2' key={name}>
+                      <div
+                        className='bg-base-300 p-4 rounded-lg shadow'
+                        key={name}
+                      >
                         <a
                           href={link}
                           target='_blank'
                           rel='noopener noreferrer'
-                          className='hover:font-semibold hover:underline'
+                          className='text-lg font-semibold hover:underline'
                         >
                           {name} - {parsedCharRealm.locale} -{' '}
                           {modifiedRealmName}
                         </a>
-                        <div className='flex flex-wrap gap-1 pt-2'>
+                        <div className='grid grid-cols-2 gap-2 pt-2'>
                           {JSON.parse(combinedData).map(
                             (
                               charData: { href: string; src: string },
                               index: number,
                             ) => (
-                              <div className='flex' key={index}>
-                                <a href={`https:${charData.href}`}>
-                                  <img
-                                    src={`https:${charData.src}`}
-                                    className='w-[36px] h-[36px] border-2 border-black rounded-md'
-                                    alt={name}
-                                    width={36}
-                                    height={36}
-                                  />
-                                </a>
+                              <div className='flex justify-start' key={index}>
+                                <a
+                                  href={`https:${charData.href}`}
+                                  target='_blank'
+                                  rel='noopener noreferrer'
+                                  className='hover:underline hover:font-semibold'
+                                />
                               </div>
                             ),
                           )}

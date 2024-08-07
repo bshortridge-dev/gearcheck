@@ -103,9 +103,9 @@ async function scrapeWowheadData(classParam: string, specParam: string) {
         items.push({
           itemSlot,
           itemName,
-          itemLink: itemLink || '', // Provide a default empty string for itemLink
+          itemLink: itemLink || '',
           sourceName,
-          sourceLink, // Allow null for sourceLink
+          sourceLink,
           className: classParam,
           classSpec: specParam,
         })
