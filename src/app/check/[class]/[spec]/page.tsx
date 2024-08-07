@@ -43,54 +43,41 @@ const SpecPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [whBestGear, setWhBestGear] = useState<WhBestGearItem[]>([])
-  useEffect(() => {
-    // Set the configuration
-
-    window.whTooltips = {
-      colorLinks: false,
-      iconizeLinks: true,
-      renameLinks: true,
-      iconSize: 'medium',
-    }
-
-    // Refresh links if $WowheadPower is available
-
-    if (
-      window.$WowheadPower &&
-      typeof window.$WowheadPower.refreshLinks === 'function'
-    ) {
-      window.$WowheadPower.refreshLinks()
-    }
-  }, [])
+  const [wowheadLoaded, setWowheadLoaded] = useState(false)
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          `/api/getData?class=${className}&spec=${classSpec}`,
-        )
-        if (!response.ok) {
-          throw new Error('Failed to fetch data')
+    const initWowhead = () => {
+      if (window.WH && window.WH.Tooltip) {
+        window.whTooltips = {
+          colorLinks: false,
+
+          iconizeLinks: true,
+
+          renameLinks: true,
+
+          iconSize: 'medium',
         }
-        const data = await response.json()
-        setCharacters(data.characters)
-        setArchonData(data.archonData)
-        setWhBestGear(data.whBestGear) // Add this line
-      } catch (error) {
-        setError('An error occurred while fetching data')
-      } finally {
-        if (
-          window.$WowheadPower &&
-          typeof window.$WowheadPower.refreshLinks === 'function'
-        ) {
-          window.$WowheadPower.refreshLinks()
-        }
-        setLoading(false)
+
+        window.WH.Tooltip.init()
+
+        setWowheadLoaded(true)
       }
     }
-    // @ts-ignore
-    window.$WowheadPower.refreshLinks(), fetchData()
-  }, [className, classSpec])
+
+    if (wowheadLoaded) {
+      initWowhead()
+    }
+  }, [wowheadLoaded])
+
+  // ... (your existing useEffect for data fetching)
+
+  useEffect(() => {
+    if (wowheadLoaded && !loading) {
+      if (window.WH && window.WH.Tooltip) {
+        window.WH.Tooltip.refresh()
+      }
+    }
+  }, [wowheadLoaded, loading, characters, archonData, whBestGear])
 
   // Group archonData by categoryName
   const groupedArchonData = archonData.reduce((acc, item) => {
@@ -119,15 +106,8 @@ const SpecPage = () => {
     <div className='relative min-h-screen w-full bg-base-100'>
       <Script
         src='https://wow.zamimg.com/widgets/power.js'
-        strategy='beforeInteractive'
-        onLoad={() => {
-          if (
-            window.$WowheadPower &&
-            typeof window.$WowheadPower.refreshLinks === 'function'
-          ) {
-            window.$WowheadPower.refreshLinks()
-          }
-        }}
+        strategy='afterInteractive'
+        onLoad={() => setWowheadLoaded(true)}
       />
       {/* Background image */}
       <div
