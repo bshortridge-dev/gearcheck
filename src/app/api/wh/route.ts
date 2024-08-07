@@ -166,8 +166,6 @@ export async function GET() {
           console.log(`Inserted new item: ${scrapedItem.itemName}`)
         }
       }
-
-      // Remove items that no longer exist in the scraped data
       const scrapedItemNames = scrapedItems.map(item => item.itemName)
       const itemsToRemove = existingItems.filter(
         item => !scrapedItemNames.includes(item.itemName),

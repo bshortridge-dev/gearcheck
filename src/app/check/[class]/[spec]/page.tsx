@@ -43,46 +43,60 @@ const SpecPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [whBestGear, setWhBestGear] = useState<WhBestGearItem[]>([])
+  const [isWowheadLoaded, setIsWowheadLoaded] = useState(false)
+  const wowheadInitialized = React.useRef(false)
 
   const configureWowhead = () => {
-    window.whTooltips = {
-      colorLinks: false,
-      iconizeLinks: true,
-      renameLinks: true,
-      iconSize: 'medium',
+    if (!wowheadInitialized.current) {
+      window.whTooltips = {
+        colorLinks: false,
+        iconizeLinks: true,
+        renameLinks: true,
+        iconSize: 'medium',
+      }
+      wowheadInitialized.current = true
     }
   }
-  const refreshWowheadLinks = () => {
+
+  const refreshWowheadLinks = (retries = 5) => {
     if (
       window.$WowheadPower &&
       typeof window.$WowheadPower.refreshLinks === 'function'
     ) {
       window.$WowheadPower.refreshLinks()
+    } else if (retries > 0) {
+      setTimeout(() => refreshWowheadLinks(retries - 1), 1000)
     }
   }
 
   useEffect(() => {
-    const fetchDataAndSetupWowhead = async () => {
-      // Configure Wowhead
+    if (isWowheadLoaded) {
       configureWowhead()
+      refreshWowheadLinks()
+    }
+  }, [isWowheadLoaded])
+
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        // Fetch data
         const response = await fetch(
           `/api/getData?class=${className}&spec=${classSpec}`,
         )
         if (!response.ok) {
           throw new Error('Failed to fetch data')
         }
-
         const data = await response.json()
-        // Update state
+
         setCharacters(data.characters)
         setArchonData(data.archonData)
         setWhBestGear(data.whBestGear)
+
         // Refresh Wowhead links after state update
         setTimeout(() => {
-          refreshWowheadLinks()
-        }, 0)
+          if (isWowheadLoaded) {
+            refreshWowheadLinks()
+          }
+        }, 100)
       } catch (error) {
         setError('An error occurred while fetching data')
       } finally {
@@ -90,9 +104,32 @@ const SpecPage = () => {
       }
     }
 
-    fetchDataAndSetupWowhead()
-  }, [className, classSpec])
+    fetchData()
+  }, [className, classSpec, isWowheadLoaded])
 
+  useEffect(() => {
+    if (isWowheadLoaded) {
+      const oldScript = document.querySelector(
+        'script[src="https://wow.zamimg.com/widgets/power.js"]',
+      )
+      if (oldScript) {
+        oldScript.remove()
+      }
+      const newScript = document.createElement('script')
+      newScript.src = 'https://wow.zamimg.com/widgets/power.js'
+      newScript.onload = () => {
+        configureWowhead()
+        refreshWowheadLinks()
+      }
+      document.body.appendChild(newScript)
+    }
+  }, [className, classSpec]) // This will run when the class or spec changes
+  // Add this new useEffect
+  useEffect(() => {
+    if (isWowheadLoaded && !loading) {
+      refreshWowheadLinks()
+    }
+  }, [isWowheadLoaded, loading])
   // Group archonData by categoryName
   const groupedArchonData = archonData.reduce((acc, item) => {
     if (!acc[item.categoryName]) {
@@ -122,12 +159,9 @@ const SpecPage = () => {
         src='https://wow.zamimg.com/widgets/power.js'
         strategy='afterInteractive'
         onLoad={() => {
-          if (
-            window.$WowheadPower &&
-            typeof window.$WowheadPower.refreshLinks === 'function'
-          ) {
-            window.$WowheadPower.refreshLinks()
-          }
+          setIsWowheadLoaded(true)
+          configureWowhead()
+          refreshWowheadLinks()
         }}
       />
       {/* Background image */}
@@ -143,15 +177,14 @@ const SpecPage = () => {
         <Specmenu />
 
         <div className='lg:col-span-3 lg:p-5 lg:mx-4 runded-box bg-base sm:w-full text-sm'>
-          <p className='max-w-[800px] items-center justify-center lg:ml-28 py-10 ml-4'>
+          <div className='max-w-[800px] items-center justify-center lg:ml-28 py-10 ml-4'>
             <p className='text-error text-lg font-semibold italic'>
               Remember, "Best in Slot" can be situational and may change with
               patches, new content releases, and evolving gameplay strategies.
               Use this guide as a reference, but don't hesitate to experiment
               and find what works best for you!
             </p>
-          </p>
-
+          </div>
           {/* Wowhead data starts here */}
 
           <div className='collapse collapse-arrow rounded-md bg-base-200 opacity-90 mb-2'>
