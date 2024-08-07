@@ -1,16 +1,11 @@
-interface WH {
-  Tooltip: {
-    init(): void;
-    refresh(): void;
-  };
-}
-
 interface Window {
-  WH?: WH;
+  $WowheadPower?: {
+    refreshLinks: () => void;
+  };
   whTooltips?: {
     colorLinks: boolean;
     iconizeLinks: boolean;
     renameLinks: boolean;
-    iconSize: string;
+    iconSize?: "small" | "medium" | "large";
   };
 }
