@@ -79,33 +79,17 @@ const SpecPage = () => {
       } catch (error) {
         setError('An error occurred while fetching data')
       } finally {
-        window.$WowheadPower?.refreshLinks()
-        setLoading(false)
-      }
-    }
-
-    fetchData(), window.$WowheadPower?.refreshLinks()
-  }, [className, classSpec])
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          `/api/getData?class=${className}&spec=${classSpec}`,
-        )
-        if (!response.ok) {
-          throw new Error('Failed to fetch data')
+        if (
+          window.$WowheadPower &&
+          typeof window.$WowheadPower.refreshLinks === 'function'
+        ) {
+          window.$WowheadPower.refreshLinks()
         }
-        const data = await response.json()
-        setCharacters(data.characters)
-        setArchonData(data.archonData)
-      } catch (error) {
-        setError('An error occurred while fetching data')
-      } finally {
         setLoading(false)
       }
     }
 
-    fetchData(), window.$WowheadPower?.refreshLinks()
+    fetchData(), window.$WowheadPower.refreshLinks()
   }, [className, classSpec])
 
   // Group archonData by categoryName
@@ -133,20 +117,6 @@ const SpecPage = () => {
 
   return (
     <div className='relative min-h-screen w-full bg-base-100'>
-      <Script
-        src='https://wow.zamimg.com/js/tooltips.js'
-        strategy='beforeInteractive'
-        onLoad={() => {
-          // Refresh links after script has loaded
-
-          if (
-            window.$WowheadPower &&
-            typeof window.$WowheadPower.refreshLinks === 'function'
-          ) {
-            window.$WowheadPower.refreshLinks()
-          }
-        }}
-      />
       {/* Background image */}
       <div
         className='fixed inset-0 bg-cover bg-center opacity-40 mt-16'
