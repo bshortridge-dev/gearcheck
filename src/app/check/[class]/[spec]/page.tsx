@@ -50,16 +50,11 @@ const SpecPage = () => {
       if (window.WH && window.WH.Tooltip) {
         window.whTooltips = {
           colorLinks: false,
-
           iconizeLinks: true,
-
           renameLinks: true,
-
           iconSize: 'medium',
         }
-
         window.WH.Tooltip.init()
-
         setWowheadLoaded(true)
       }
     }
@@ -69,7 +64,27 @@ const SpecPage = () => {
     }
   }, [wowheadLoaded])
 
-  // ... (your existing useEffect for data fetching)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          `/api/getData?class=${className}&spec=${classSpec}`,
+        )
+        if (!response.ok) {
+          throw new Error('Failed to fetch data')
+        }
+        const data = await response.json()
+        setCharacters(data.characters)
+        setArchonData(data.archonData)
+        setWhBestGear(data.whBestGear) // Add this line
+      } catch (error) {
+        setError('An error occurred while fetching data')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [className, classSpec])
 
   useEffect(() => {
     if (wowheadLoaded && !loading) {
