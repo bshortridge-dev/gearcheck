@@ -118,26 +118,66 @@ async function scrapeWowheadData(classParam: string, specParam: string) {
 }
 
 export async function GET() {
-  // @ts-ignore
-  await prisma.whBestGear.deleteMany()
-
   try {
     for (const { class: classParam, spec: specParam } of classSpecs) {
       console.log(`Scraping data for ${classParam} - ${specParam}`)
-      const items = await scrapeWowheadData(classParam, specParam)
+      const scrapedItems = await scrapeWowheadData(classParam, specParam)
       console.log(
-        `Found ${items.length} items for ${classParam} - ${specParam}`,
+        `Found ${scrapedItems.length} items for ${classParam} - ${specParam}`,
       )
 
-      for (const item of items) {
-        try {
+      // Fetch existing items for this class and spec
+      const existingItems = await prisma.whBestGear.findMany({
+        where: {
+          className: classParam,
+          classSpec: specParam,
+        },
+      })
+
+      for (const scrapedItem of scrapedItems) {
+        const existingItem = existingItems.find(
+          item =>
+            item.itemName === scrapedItem.itemName &&
+            item.itemSlot === scrapedItem.itemSlot,
+        )
+
+        if (existingItem) {
+          if (
+            existingItem.itemLink !== scrapedItem.itemLink ||
+            existingItem.sourceName !== scrapedItem.sourceName ||
+            existingItem.sourceLink !== scrapedItem.sourceLink
+          ) {
+            await prisma.whBestGear.update({
+              where: { id: existingItem.id },
+              data: {
+                itemLink: scrapedItem.itemLink,
+                sourceName: scrapedItem.sourceName,
+                sourceLink: scrapedItem.sourceLink,
+              },
+            })
+            console.log(`Updated item: ${scrapedItem.itemName}`)
+          } else {
+            console.log(`No changes for item: ${scrapedItem.itemName}`)
+          }
+        } else {
           await prisma.whBestGear.create({
-            data: item,
+            data: scrapedItem,
           })
-          console.log(`Inserted item: ${item.itemName}`)
-        } catch (insertError) {
-          console.error(`Error inserting item ${item.itemName}:`, insertError)
+          console.log(`Inserted new item: ${scrapedItem.itemName}`)
         }
+      }
+
+      // Remove items that no longer exist in the scraped data
+      const scrapedItemNames = scrapedItems.map(item => item.itemName)
+      const itemsToRemove = existingItems.filter(
+        item => !scrapedItemNames.includes(item.itemName),
+      )
+
+      for (const itemToRemove of itemsToRemove) {
+        await prisma.whBestGear.delete({
+          where: { id: itemToRemove.id },
+        })
+        console.log(`Removed obsolete item: ${itemToRemove.itemName}`)
       }
     }
 

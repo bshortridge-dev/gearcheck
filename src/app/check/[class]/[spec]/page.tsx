@@ -64,19 +64,6 @@ const SpecPage = () => {
   }, [])
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (
-        window.$WowheadPower &&
-        typeof window.$WowheadPower.refreshLinks === 'function'
-      ) {
-        window.$WowheadPower.refreshLinks()
-      }
-    }, 1000) // 1 second delay
-
-    return () => clearTimeout(timer)
-  }, [])
-
-  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(
@@ -92,11 +79,12 @@ const SpecPage = () => {
       } catch (error) {
         setError('An error occurred while fetching data')
       } finally {
+        window.$WowheadPower?.refreshLinks()
         setLoading(false)
       }
     }
 
-    fetchData()
+    fetchData(), window.$WowheadPower?.refreshLinks()
   }, [className, classSpec])
   useEffect(() => {
     const fetchData = async () => {
@@ -117,7 +105,7 @@ const SpecPage = () => {
       }
     }
 
-    fetchData()
+    fetchData(), window.$WowheadPower?.refreshLinks()
   }, [className, classSpec])
 
   // Group archonData by categoryName
@@ -180,7 +168,9 @@ const SpecPage = () => {
               and find what works best for you!
             </p>
           </p>
-          {/* start collapse cards */}
+
+          {/* Wowhead data starts here */}
+
           <div className='collapse collapse-arrow rounded-md bg-base-200 opacity-90 mb-2'>
             <input type='checkbox' />
             <div className='collapse-title text-xl font-medium'>
@@ -275,13 +265,13 @@ const SpecPage = () => {
                             >
                               {item.sourceName.replace(
                                 /Catalyst(?!:)/,
-                                'Catalyst: ',
+                                'Catalyst ',
                               )}
                             </a>
                           ) : (
                             item.sourceName.replace(
                               /Catalyst(?!:)/,
-                              'Catalyst: ',
+                              'Catalyst ',
                             )
                           )}
                         </div>
@@ -293,7 +283,9 @@ const SpecPage = () => {
             </div>
           </div>
 
-          <div className='collapse collapse-arrow  rounded-md bg-base-200 opacity-90 mb-2'>
+          {/* Archon/Warcraft log data starts here */}
+
+          <div className='collapse collapse-arrow rounded-md bg-base-200 opacity-90 mb-2'>
             <input type='checkbox' />
             <div className='collapse-title text-xl font-medium'>
               <h2 className='text-2xl font-bold mb-4'>
@@ -335,37 +327,66 @@ const SpecPage = () => {
                 <div key={categoryName} className='mb-8'>
                   <h3 className='text-xl font-semibold mb-4'>{categoryName}</h3>
                   <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                    {items.map((item, index) => (
-                      <div
-                        key={index}
-                        className='bg-base-300 p-4 rounded-lg shadow'
-                      >
-                        <div className='flex items-center mb-2'>
-                          {/* <img
-                            src={item.itemIcon}
-                            alt={item.itemName}
-                            className='mr-2 w-[36px] h-[36px] border-2 border-gray-900 rounded-md'
-                          /> */}
-                          <a
-                            href={item.href}
-                            className='hover:underline hover:font-semibold'
-                            target='_blank'
-                            rel='noopener noreferrer'
-                          >
-                            {item.itemName}
-                          </a>
+                    {items.map((item, index) => {
+                      const popularityPercentage = parseFloat(
+                        item.popularity.replace('%', ''),
+                      )
+                      const highestKey = parseInt(item.maxKey.replace('+', ''))
+
+                      const popularityColorClass =
+                        popularityPercentage >= 25 && popularityPercentage < 55
+                          ? 'text-purple-500 font-semibold'
+                          : popularityPercentage >= 55
+                          ? 'text-orange-500 font-semibold'
+                          : ''
+
+                      const keyColorClass =
+                        highestKey >= 10 && highestKey <= 15
+                          ? 'text-purple-500 font-semibold'
+                          : highestKey >= 16
+                          ? 'text-orange-500 font-semibold'
+                          : ''
+
+                      return (
+                        <div
+                          key={index}
+                          className='bg-base-300 p-4 rounded-lg shadow'
+                        >
+                          <div className='flex items-center mb-2'>
+                            <a
+                              href={item.href}
+                              className='hover:underline hover:font-semibold'
+                              target='_blank'
+                              rel='noopener noreferrer'
+                            >
+                              {item.itemName}
+                            </a>
+                          </div>
+                          <div>
+                            <p>
+                              Highest Key Timed:{' '}
+                              <span className={keyColorClass}>
+                                {item.maxKey}
+                              </span>
+                            </p>
+                            <p>
+                              Popularity:{' '}
+                              <span className={popularityColorClass}>
+                                {item.popularity}
+                              </span>
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p>Highest Key Timed: {item.maxKey}</p>
-                          <p>Popularity: {item.popularity}</p>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Raider.io data starts here */}
+
           <div className='collapse collapse-arrow rounded-md bg-base-200 opacity-90 mb-2'>
             <input type='checkbox' />
             <div className='collapse-title text-xl font-medium'>
