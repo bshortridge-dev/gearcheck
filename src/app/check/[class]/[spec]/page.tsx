@@ -88,8 +88,8 @@ const SpecPage = () => {
         setLoading(false)
       }
     }
-
-    fetchData(), window.$WowheadPower?.refreshLinks()
+    // @ts-ignore
+    window.$WowheadPower.refreshLinks(), fetchData()
   }, [className, classSpec])
 
   // Group archonData by categoryName
