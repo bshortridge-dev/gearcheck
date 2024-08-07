@@ -32,6 +32,20 @@ interface WhBestGearItem {
   itemLink: string
   sourceLink?: string // Optional, as it might not always be available
 }
+declare global {
+  interface Window {
+    WH?: any
+    $WowheadPower?: {
+      refreshLinks?: () => void
+    }
+    whTooltips?: {
+      colorLinks: boolean
+      iconizeLinks: boolean
+      renameLinks: boolean
+      iconSize: string
+    }
+  }
+}
 
 const SpecPage = () => {
   const { class: className, spec: classSpec } = useParams<{
@@ -60,6 +74,7 @@ const SpecPage = () => {
 
   const refreshWowheadLinks = (retries = 5) => {
     if (
+      window.WH &&
       window.$WowheadPower &&
       typeof window.$WowheadPower.refreshLinks === 'function'
     ) {
@@ -93,9 +108,7 @@ const SpecPage = () => {
 
         // Refresh Wowhead links after state update
         setTimeout(() => {
-          if (isWowheadLoaded) {
-            refreshWowheadLinks()
-          }
+          refreshWowheadLinks()
         }, 100)
       } catch (error) {
         setError('An error occurred while fetching data')
@@ -105,31 +118,16 @@ const SpecPage = () => {
     }
 
     fetchData()
-  }, [className, classSpec, isWowheadLoaded])
+  }, [className, classSpec])
 
   useEffect(() => {
-    if (isWowheadLoaded) {
-      const oldScript = document.querySelector(
-        'script[src="https://wow.zamimg.com/widgets/power.js"]',
-      )
-      if (oldScript) {
-        oldScript.remove()
-      }
-      const newScript = document.createElement('script')
-      newScript.src = 'https://wow.zamimg.com/widgets/power.js'
-      newScript.onload = () => {
-        configureWowhead()
-        refreshWowheadLinks()
-      }
-      document.body.appendChild(newScript)
-    }
-  }, [className, classSpec]) // This will run when the class or spec changes
-  // Add this new useEffect
-  useEffect(() => {
     if (isWowheadLoaded && !loading) {
-      refreshWowheadLinks()
+      setTimeout(() => {
+        refreshWowheadLinks()
+      }, 100)
     }
   }, [isWowheadLoaded, loading])
+
   // Group archonData by categoryName
   const groupedArchonData = archonData.reduce((acc, item) => {
     if (!acc[item.categoryName]) {
@@ -160,8 +158,6 @@ const SpecPage = () => {
         strategy='afterInteractive'
         onLoad={() => {
           setIsWowheadLoaded(true)
-          configureWowhead()
-          refreshWowheadLinks()
         }}
       />
       {/* Background image */}
