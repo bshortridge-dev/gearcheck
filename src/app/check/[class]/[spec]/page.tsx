@@ -89,7 +89,7 @@ const SpecPage = () => {
       }
     }
 
-    fetchData(), window.$WowheadPower.refreshLinks()
+    fetchData(), window.$WowheadPower?.refreshLinks()
   }, [className, classSpec])
 
   // Group archonData by categoryName
