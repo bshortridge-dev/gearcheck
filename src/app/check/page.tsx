@@ -3,12 +3,13 @@ import Image from 'next/image'
 
 export default async function page() {
   return (
-    <div className='relative h-screen w-full bg-base-100'>
+    <div className='relative min-h-screen w-full bg-base-100 flex items-center justify-center'>
       {/* Background image */}
       <div
-        className='fixed inset-0 bg-cover bg-center mt-16 opacity-40'
+        className='fixed inset-0 bg-cover bg-center opacity-70 scale-x-[-1]'
         style={{
           backgroundImage: "url('/assets/arthas.jpg')",
+          top: '0px', // Adjust this value to match your navbar height
         }}
       ></div>
 
@@ -16,7 +17,7 @@ export default async function page() {
       <div className='relative z-10 grid grid-cols-1 lg:grid-cols-4 gap-3 p-3 w-full lg:w-[80%] min-h-screen'>
         <Specmenu />
         <div className='lg:col-span-3 p-5 mx-4 rounded-box bg-base-200 bg-opacity-80'>
-          <p className='max-w-[800px] items-center justify-center lg:ml-28 py-10 ml-4'>
+          <div className='max-w-[800px] items-center justify-center lg:ml-28 py-10 ml-4'>
             Welcome to our Best in Slot list for World of Warcraft. Gearcheck
             aims to provide you with up-to-date information on the most popular
             gear choices for each specialization. Our data is gathered daily
@@ -77,7 +78,7 @@ export default async function page() {
                 Get started by choosing a your class and spec!
               </p>
             </div>
-          </p>
+          </div>
         </div>
       </div>
     </div>

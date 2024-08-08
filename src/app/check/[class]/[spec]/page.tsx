@@ -152,7 +152,7 @@ const SpecPage = () => {
   const reversedGroupedArchonData = Object.entries(groupedArchonData).reverse()
 
   return (
-    <div className='relative min-h-screen w-full bg-base-100'>
+    <div className='relative min-h-screen w-full bg-base-100 flex items-center justify-center'>
       <Script
         src='https://wow.zamimg.com/widgets/power.js'
         strategy='afterInteractive'
@@ -162,9 +162,10 @@ const SpecPage = () => {
       />
       {/* Background image */}
       <div
-        className='fixed inset-0 bg-cover bg-center opacity-40 mt-16'
+        className='fixed inset-0 bg-cover bg-center opacity-40'
         style={{
           backgroundImage: "url('/assets/jaina.jpg')",
+          top: '0px', // Adjust this value to match your navbar height
         }}
       ></div>
 
@@ -358,7 +359,7 @@ const SpecPage = () => {
                       return word
                     }
                   })
-                  .join(' ')} Log Data`}
+                  .join(' ')} Warcraft Log Data`}
               </h2>
             </div>
             <div className='collapse-content'>

@@ -18,10 +18,12 @@ export default function RootLayout({
   return (
     <html lang='en' data-theme='dim'>
       <body className={inter.className}>
-        <Navbar />
-        <main className='flex flex-col items-center justify-center bg-base-100 min-h-screen overflow-x-hidden'>
-          {children}
-        </main>
+        <div className='flex flex-col min-h-screen'>
+          <Navbar />
+          <main className='flex-grow bg-base-100 overflow-x-hidden'>
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   )

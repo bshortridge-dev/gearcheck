@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default async function Navbar() {
   return (
-    <div className='navbar bg-base-300 max-w-screen h-14'>
+    <div className='navbar z-50 bg-base-300 max-w-screen h-14'>
       <div className='flex-1'>
         <Link
           href={'/'}
