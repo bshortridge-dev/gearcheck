@@ -14,7 +14,10 @@ export default async function Navbar() {
       <div className='flex-none'>
         <ul className='menu menu-horizontal px-1'>
           <li>
-            <Link href='/check'>About</Link>
+            <Link href='/check'>Current BiS</Link>
+          </li>
+          <li>
+            <Link href='/myToon'>Compare Your Gear</Link>
           </li>
           {/* <li>
             <details>

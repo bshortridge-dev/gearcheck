@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import puppeteer from 'puppeteer'
+import chromium from 'chrome-aws-lambda'
 import cheerio from 'cheerio'
+import puppeteer from 'puppeteer-core'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
@@ -13,7 +14,13 @@ export async function POST(req: Request) {
   try {
     const url = `https://worldofwarcraft.blizzard.com/en-us/character/${region}/${realmName}/${characterName}`
 
-    const browser = await puppeteer.launch()
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
+    })
+
     const page = await browser.newPage()
     await page.goto(url)
 
@@ -23,8 +30,13 @@ export async function POST(req: Request) {
     const content = await page.content()
     const $ = cheerio.load(content)
 
-    // Scrape class and spec
-    const classSpecText = $('.CharacterHeader-detail span:last-child').text()
+    // Scrape class, spec, and race
+    const headerDetails = $('.CharacterHeader-detail span')
+      .map((_, el) => $(el).text())
+      .get()
+
+    // Assuming the format is always [level, race, class spec]
+    const [level, race, classSpecText] = headerDetails
     const classSpecParts = classSpecText.split(' ')
 
     let rawClassSpec, rawClassName
@@ -44,6 +56,16 @@ export async function POST(req: Request) {
 
     // Scrape character image
     const charPic = $('img[src^="data:image/png;base64"]').attr('src')
+
+    // Scrape overall item level (updated part)
+    const ilvlElement = $('.CharacterHeader-media')
+      .filter(function () {
+        return $(this).find('.Icon--swords').length > 0
+      })
+      .find('.Media-text')
+    const ilvlText = ilvlElement.text().trim()
+    const ilvlMatch = ilvlText.match(/(\d+)\s*ilvl/)
+    const overallIlvl = ilvlMatch ? parseInt(ilvlMatch[1], 10) : null
 
     // Scrape item details
     const itemSlots = [
@@ -74,42 +96,34 @@ export async function POST(req: Request) {
 
         const iconElement = $item.find('.GameIcon-icon')
         const iconStyle = iconElement.attr('style') || ''
-        console.log(`Icon style for ${itemSlots[index]}:`, iconStyle)
 
         let iconUrl = ''
-        console.log(`Full style attribute for ${itemSlots[index]}:`, iconStyle)
-
-        // Extract URL using string manipulation
         if (iconStyle.includes('url(')) {
           iconUrl = iconStyle
             .split('url(')[1]
             .split(')')[0]
-            .replace(/['"]/g, '')
-          console.log(`Extracted URL for ${itemSlots[index]}:`, iconUrl)
-        } else {
-          console.log(`No URL found for ${itemSlots[index]}`)
+            .replace(/['\"]/g, '')
         }
-
-        console.log(
-          `Final extracted icon URL for ${itemSlots[index]}:`,
-          iconUrl,
-        )
 
         const itemName = $itemDetails.find('.CharacterProfile-itemName').text()
         const itemLevel = $itemDetails
           .find('.CharacterProfile-itemLevel')
           .text()
 
+        const enchantment = $itemDetails
+          .find('.CharacterProfile-itemEnchantment')
+          .text()
+          .trim()
+
         return {
           slot: itemSlots[index],
           name: itemName,
           level: parseInt(itemLevel) || 0,
           iconUrl: iconUrl,
+          enchantment: enchantment || null,
         }
       })
       .get()
-
-    console.log('Full items array:', JSON.stringify(items, null, 2))
 
     // Filter out Shirt and Tabard
     const filteredItems = items.filter(
@@ -117,12 +131,15 @@ export async function POST(req: Request) {
     )
 
     await browser.close()
-    console.log(filteredItems)
+
     return NextResponse.json({
       classSpec,
       className,
       charPic,
       items: filteredItems,
+      race,
+      level,
+      overallIlvl,
     })
   } catch (error) {
     console.error('Error scraping character data:', error)
