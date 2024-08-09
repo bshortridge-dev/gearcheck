@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import cheerio from 'cheerio'
-import puppeteer from 'puppeteer'
+import { chromium } from 'playwright'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
@@ -13,12 +13,10 @@ export async function POST(req: Request) {
   try {
     const url = `https://worldofwarcraft.blizzard.com/en-us/character/${region}/${realmName}/${characterName}`
 
-    const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      headless: true,
-    })
+    const browser = await chromium.launch({ headless: true })
+    const context = await browser.newContext()
+    const page = await context.newPage()
 
-    const page = await browser.newPage()
     await page.goto(url)
 
     // Wait for the content to load
