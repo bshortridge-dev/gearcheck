@@ -117,7 +117,7 @@ export default function Page() {
         throw new Error('Failed to fetch character data')
       }
 
-      const  CharacterData = await response.json()
+      const data = await response.json()
 
       if (Object.keys(data).length === 0) {
         // Handle the case where the API returns an empty object
