@@ -1,18 +1,6 @@
 import { NextResponse } from 'next/server'
 import cheerio from 'cheerio'
-
-// Conditional imports
-let puppeteer: any
-let chromium: any
-
-if (process.env.NODE_ENV === 'production') {
-  // In production (Vercel), use puppeteer-core and @sparticuz/chromium
-  puppeteer = require('puppeteer-core')
-  chromium = require('@sparticuz/chromium')
-} else {
-  // In development, use regular puppeteer
-  puppeteer = require('puppeteer')
-}
+import puppeteer from 'puppeteer'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
@@ -29,20 +17,10 @@ export async function POST(req: Request) {
 
     console.log('Scraping URL:', url)
 
-    let browser
-    if (process.env.NODE_ENV === 'production') {
-      // Launch browser for production environment
-      browser = await puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-        ignoreHTTPSErrors: true,
-      })
-    } else {
-      // Launch browser for local development
-      browser = await puppeteer.launch()
-    }
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true,
+    })
 
     const page = await browser.newPage()
     await page.goto(url)
