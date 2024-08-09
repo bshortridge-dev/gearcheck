@@ -33,6 +33,7 @@ export default function Page() {
   const [characterData, setCharacterData] = useState<CharacterData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [recommendedItems, setRecommendedItems] = useState<ArchonItem[]>([])
+  const [errorMessage, setErrorMessage] = useState('')
   const [isWowheadLoaded, setIsWowheadLoaded] = useState(false)
   const wowheadInitialized = React.useRef(false)
   const [loading, setLoading] = useState(true)
@@ -82,7 +83,15 @@ export default function Page() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setErrorMessage('') // Clear any previous error messages
     setIsLoading(true)
+
+    // Check if character name contains spaces or special characters
+    if (!/^[a-zA-Z0-9-]+$/.i.test(characterName)) {
+      setErrorMessage('Character name must not contain spaces or special characters.')
+      setIsLoading(false)
+      return
+    }
     const formattedRealmName = realmName.replace(/\s+/g, '-').toLowerCase()
     const regionCode = {
       'North America': 'us',
@@ -207,6 +216,7 @@ export default function Page() {
                   <option>Korea</option>
                 </select>
               </label>
+            {errorMessage && <p className="text-red-500">{errorMessage}</p>}
               <button
                 type='submit'
                 className='btn btn-sm mt-4'
@@ -221,26 +231,28 @@ export default function Page() {
               <CenteredImage base64Image={characterData.charPic} />
             ) : (
               <div className='text-center'>
-                Character image will appear here
+                {isLoading ? (
+                  'Loading Character...'
+                ) : (
+                  'Character image will appear here'
+                )}
               </div>
             )}
           </div>
         </div>
-        {characterData &&
-          characterData.items &&
-          characterData.items.length > 0 && (
-            <div className='mt-4 p-4 bg-base-200 rounded-box'>
-              <h2 className='text-xl font-bold mb-2'>Character Data:</h2>
-              <p>
-                <strong>Class Spec:</strong> {characterData.classSpec}
-              </p>
-              <p>
-                <strong>Class Name:</strong> {characterData.className}
-              </p>
+        {characterData && characterData.items && characterData.items.length > 0 ? (
+          <div className='mt-4 p-4 bg-base-200 rounded-box'>
+            <h2 className='text-xl font-bold mb-2'>Character Data:</h2>
+            <p>
+              <strong>Class Spec:</strong> {characterData.classSpec}
+            </p>
+            <p>
+              <strong>Class Name:</strong> {characterData.className}
+            </p>
 
-              <h3 className='text-lg font-bold mt-4 mb-2'>Items:</h3>
-              <div className='grid grid-cols-2 gap-4'>
-                {characterData.items
+            <h3 className='text-lg font-bold mt-4 mb-2'>Items:</h3>
+            <div className='grid grid-cols-2 gap-4'>
+            {characterData.items
                   .filter(item => item.level !== 0) // Filter out items with level 0
                   .map((item, index) => {
                     const categoryName = mapSlotToCategory(item.slot)
