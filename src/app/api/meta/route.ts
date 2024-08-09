@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import chromium from 'chrome-aws-lambda'
+import puppeteer from 'puppeteer'
 import cheerio from 'cheerio'
-import puppeteer from 'puppeteer-core'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
@@ -16,14 +15,9 @@ export async function POST(req: Request) {
       className,
     )}/${transformToApiFormat(classSpec)}`
 
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
-      ignoreHTTPSErrors: true,
-    })
+    console.log('Scraping URL:', url)
 
+    const browser = await puppeteer.launch()
     const page = await browser.newPage()
     await page.goto(url)
 
@@ -78,11 +72,14 @@ export async function POST(req: Request) {
           }
         })
 
+        console.log(`Best enchant for ${slot}:`, bestEnchant)
         return bestEnchant
       })
       .filter(enchant => enchant !== null)
 
     await browser.close()
+
+    console.log('Final enchants data:', JSON.stringify(enchants, null, 2))
 
     return NextResponse.json({ enchants })
   } catch (error) {
