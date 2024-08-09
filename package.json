@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "node node_modules/@sparticuz/chromium/install.js",
     "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
@@ -14,8 +15,6 @@
     "@sparticuz/chromium": "^126.0.0",
     "cheerio": "^1.0.0-rc.12",
     "next": "14.2.5",
-    "chrome-aws-lambda": "^10.1.0",
-    "puppeteer-core": "^10.1.0",
     "puppeteer": "^23.0.2",
     "react": "^18",
     "react-dom": "^18",

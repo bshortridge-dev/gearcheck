@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import cheerio from 'cheerio'
-import chromium from 'chrome-aws-lambda'
-import { chromium as playwrightChromium } from 'playwright-core'
+import puppeteer from 'puppeteer'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
@@ -11,19 +10,15 @@ const transformToApiFormat = (input: string): string => {
 export async function POST(req: Request) {
   const { characterName, realmName, region } = await req.json()
 
-  let browser = null
-
   try {
     const url = `https://worldofwarcraft.blizzard.com/en-us/character/${region}/${realmName}/${characterName}`
 
-    browser = await playwrightChromium.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true,
     })
-    const context = await browser.newContext()
-    const page = await context.newPage()
 
+    const page = await browser.newPage()
     await page.goto(url)
 
     // Wait for the content to load
@@ -132,6 +127,8 @@ export async function POST(req: Request) {
       item => item.slot !== 'Shirt' && item.slot !== 'Tabard',
     )
 
+    await browser.close()
+
     return NextResponse.json({
       classSpec,
       className,
@@ -147,9 +144,5 @@ export async function POST(req: Request) {
       { error: 'Failed to scrape character data' },
       { status: 500 },
     )
-  } finally {
-    if (browser) {
-      await browser.close()
-    }
   }
 }
