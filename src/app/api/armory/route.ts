@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import cheerio from 'cheerio'
-import Chromium from '@sparticuz/chromium'
+import Chromium from '@sparticuz/chromium-min'
 import puppeteer from 'puppeteer-core'
 
 // Utility function to transform class names and specs
@@ -14,7 +14,7 @@ async function getBrowser() {
     executablePath: await Chromium.executablePath(
       `https://github.com/Sparticuz/chromium/releases/download/v116.0.0/chromium-v116.0.0-pack.tar`,
     ),
-    headless: Chromium.headless,
+    headless: true,
   })
 }
 export async function POST(req: Request) {
@@ -138,8 +138,6 @@ export async function POST(req: Request) {
     const filteredItems = items.filter(
       item => item.slot !== 'Shirt' && item.slot !== 'Tabard',
     )
-
-    await browser.close()
 
     return NextResponse.json({
       classSpec,

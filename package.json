@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.17.0",
-    "@sparticuz/chromium": "^126.0.0",
+    "@sparticuz/chromium-min": "^115.0.0",
     "cheerio": "^1.0.0-rc.12",
     "next": "14.2.5",
     "puppeteer": "^23.0.2",

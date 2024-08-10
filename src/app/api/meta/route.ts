@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import cheerio from 'cheerio'
 import puppeteer from 'puppeteer-core'
-import Chromium from '@sparticuz/chromium'
+import Chromium from '@sparticuz/chromium-min'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
@@ -14,7 +14,7 @@ async function getBrowser() {
     executablePath: await Chromium.executablePath(
       `https://github.com/Sparticuz/chromium/releases/download/v116.0.0/chromium-v116.0.0-pack.tar`,
     ),
-    headless: Chromium.headless,
+    headless: true,
   })
 }
 export async function POST(req: Request) {
@@ -87,8 +87,6 @@ export async function POST(req: Request) {
         return bestEnchant
       })
       .filter(enchant => enchant !== null)
-
-    await browser.close()
 
     console.log('Final enchants data:', JSON.stringify(enchants, null, 2))
 
