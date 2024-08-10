@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server'
-import cheerio from 'cheerio'
+import * as cheerio from 'cheerio'
 import puppeteer from 'puppeteer-core'
-import Chromium from '@sparticuz/chromium'
+import chromium from '@sparticuz/chromium-min'
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
   return input.toLowerCase().replace(/\s+/g, '-')
 }
 async function getBrowser() {
   return puppeteer.launch({
-    args: [...Chromium.args, '--hide-scrollbars', '--disable-web-security'],
-    defaultViewport: Chromium.defaultViewport,
-    executablePath: await Chromium.executablePath(
+    args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(
       `https://github.com/Sparticuz/chromium/releases/download/v116.0.0/chromium-v116.0.0-pack.tar`,
     ),
-    headless: true,
+    headless: chromium.headless,
   })
 }
 export async function POST(req: Request) {
@@ -35,6 +35,7 @@ export async function POST(req: Request) {
     await page.waitForSelector('table')
 
     const content = await page.content()
+    console.log('Content:', content)
     const $ = cheerio.load(content)
 
     const enchantSlots = [

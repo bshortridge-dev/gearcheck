@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import cheerio from 'cheerio'
-import Chromium from '@sparticuz/chromium'
+import * as cheerio from 'cheerio'
+import chromium from '@sparticuz/chromium-min'
 import puppeteer from 'puppeteer-core'
 
 // Utility function to transform class names and specs
@@ -9,12 +9,12 @@ const transformToApiFormat = (input: string): string => {
 }
 async function getBrowser() {
   return puppeteer.launch({
-    args: [...Chromium.args, '--hide-scrollbars', '--disable-web-security'],
-    defaultViewport: Chromium.defaultViewport,
-    executablePath: await Chromium.executablePath(
+    args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(
       `https://github.com/Sparticuz/chromium/releases/download/v116.0.0/chromium-v116.0.0-pack.tar`,
     ),
-    headless: true,
+    headless: chromium.headless,
   })
 }
 export async function POST(req: Request) {
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
     const content = await page.content()
     console.log('content loaded')
-
+    console.log('Content:', content)
     const $ = cheerio.load(content)
 
     // Scrape class, spec, and race
