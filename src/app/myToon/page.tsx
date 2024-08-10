@@ -138,7 +138,7 @@ export default function Page() {
     }[data.region] as 'us' | 'eu' | 'tw' | 'kr'
 
     try {
-      const response = await fetch('/api/armory', {
+      const response = await fetch('/api/armory/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -172,7 +172,7 @@ export default function Page() {
         throw new Error('Failed to fetch recommended items')
       }
       // Inside the try block of onSubmit, after fetching character and recommended item data
-      const enchantResponse = await fetch('/api/meta', {
+      const enchantResponse = await fetch('/api/meta/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

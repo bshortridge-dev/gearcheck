@@ -1,0 +1,13 @@
+{
+  "name": "wow-api-functions",
+  "version": "1.0.0",
+  "description": "WoW API Functions",
+  "main": "index.js",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "puppeteer": "^19.0.0"
+  },
+  "engines": {
+    "node": "18"
+  }
+}

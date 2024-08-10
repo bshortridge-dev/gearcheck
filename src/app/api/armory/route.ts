@@ -1,30 +1,42 @@
 import { NextResponse } from 'next/server'
 import cheerio from 'cheerio'
-import puppeteer from 'puppeteer'
+import Chromium from '@sparticuz/chromium-min'
+import puppeteer from 'puppeteer-core'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
   return input.toLowerCase().replace(/\s+/g, '-')
 }
-
+async function getBrowser() {
+  return puppeteer.launch({
+    args: [...Chromium.args, '--hide-scrollbars', '--disable-web-security'],
+    defaultViewport: Chromium.defaultViewport,
+    executablePath: await Chromium.executablePath(
+      `https://github.com/Sparticuz/chromium/releases/download/v116.0.0/chromium-v116.0.0-pack.tar`,
+    ),
+    headless: Chromium.headless,
+  })
+}
 export async function POST(req: Request) {
   const { characterName, realmName, region } = await req.json()
 
   try {
     const url = `https://worldofwarcraft.blizzard.com/en-us/character/${region}/${realmName}/${characterName}`
 
-    const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      headless: true,
-    })
-
+    const browser = await getBrowser()
+    console.log('Attached Browser')
     const page = await browser.newPage()
+    console.log('Loaded chromium')
+
     await page.goto(url)
+    console.log('Url opened')
 
     // Wait for the content to load
     await page.waitForSelector('.CharacterHeader-detail')
 
     const content = await page.content()
+    console.log('content loaded')
+
     const $ = cheerio.load(content)
 
     // Scrape class, spec, and race

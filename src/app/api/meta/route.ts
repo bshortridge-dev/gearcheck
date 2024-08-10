@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server'
 import cheerio from 'cheerio'
-import puppeteer from 'puppeteer'
+import Chromium from '@sparticuz/chromium'
+import puppeteer from 'puppeteer-core'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
   return input.toLowerCase().replace(/\s+/g, '-')
 }
-
+async function getBrowser() {
+  return puppeteer.launch({
+    args: [...Chromium.args, '--hide-scrollbars', '--disable-web-security'],
+    defaultViewport: Chromium.defaultViewport,
+    executablePath: await Chromium.executablePath(
+      `https://github.com/Sparticuz/chromium/releases/download/v116.0.0/chromium-v116.0.0-pack.tar`,
+    ),
+    headless: Chromium.headless,
+  })
+}
 export async function POST(req: Request) {
   const { className, classSpec } = await req.json()
 
@@ -17,10 +27,7 @@ export async function POST(req: Request) {
 
     console.log('Scraping URL:', url)
 
-    const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      headless: true,
-    })
+    const browser = await getBrowser()
 
     const page = await browser.newPage()
     await page.goto(url)

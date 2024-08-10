@@ -7,22 +7,20 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "node node_modules/@sparticuz/chromium/install.js",
     "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
     "@prisma/client": "^5.17.0",
-    "@sparticuz/chromium": "^126.0.0",
+    "@sparticuz/chromium-min": "^115.0.0",
     "cheerio": "^1.0.0-rc.12",
     "next": "14.2.5",
     "puppeteer": "^23.0.2",
+    "puppeteer-core": "^21.0.2",
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.52.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.25.3",
     "@types/eslint": "^9.6.0",
     "@types/eslint-scope": "^3.7.7",
     "@types/estree": "^1.0.5",
