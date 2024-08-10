@@ -1,21 +1,12 @@
 import { NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
-import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium-min'
+import puppeteer from 'puppeteer'
+
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
   return input.toLowerCase().replace(/\s+/g, '-')
 }
-async function getBrowser() {
-  return puppeteer.launch({
-    args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath(
-      `https://github.com/Sparticuz/chromium/releases/download/v116.0.0/chromium-v116.0.0-pack.tar`,
-    ),
-    headless: chromium.headless,
-  })
-}
+
 export async function POST(req: Request) {
   const { className, classSpec } = await req.json()
 
@@ -26,7 +17,10 @@ export async function POST(req: Request) {
 
     console.log('Scraping URL:', url)
 
-    const browser = await getBrowser()
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true,
+    })
 
     const page = await browser.newPage()
     await page.goto(url)
@@ -35,7 +29,6 @@ export async function POST(req: Request) {
     await page.waitForSelector('table')
 
     const content = await page.content()
-    console.log('Content:', content)
     const $ = cheerio.load(content)
 
     const enchantSlots = [
@@ -87,6 +80,8 @@ export async function POST(req: Request) {
         return bestEnchant
       })
       .filter(enchant => enchant !== null)
+
+    await browser.close()
 
     console.log('Final enchants data:', JSON.stringify(enchants, null, 2))
 

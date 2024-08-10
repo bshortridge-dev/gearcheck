@@ -171,7 +171,7 @@ export default function Page() {
       } else {
         throw new Error('Failed to fetch recommended items')
       }
-      // Inside the try block of onSubmit, after fetching character and recommended item data
+      // // Inside the try block of onSubmit, after fetching character and recommended item data
       const enchantResponse = await fetch('/api/meta/', {
         method: 'POST',
         headers: {
