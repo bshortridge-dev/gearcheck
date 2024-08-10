@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import cheerio from 'cheerio'
-import Chromium from '@sparticuz/chromium-min'
+import Chromium from '@sparticuz/chromium'
 import puppeteer from 'puppeteer-core'
 
 // Utility function to transform class names and specs
