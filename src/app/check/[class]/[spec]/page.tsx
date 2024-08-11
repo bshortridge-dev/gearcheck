@@ -89,7 +89,7 @@ const SpecPage = () => {
       configureWowhead()
       refreshWowheadLinks()
     }
-  }, [isWowheadLoaded])
+  }, [isWowheadLoaded, refreshWowheadLinks])
 
   useEffect(() => {
     const fetchData = async () => {

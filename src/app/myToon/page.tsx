@@ -119,7 +119,7 @@ export default function Page() {
         refreshWowheadLinks()
       }, 100)
     }
-  }, [isWowheadLoaded, loading])
+  }, [isWowheadLoaded, loading, refreshWowheadLinks])
 
   const transformToApiFormat = (input: string): string => {
     return input.toLowerCase().replace(/\s+/g, '-')
