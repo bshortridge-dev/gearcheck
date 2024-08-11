@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/*.js": {
+    "api/*.tsx": {
       "maxDuration": 60
     }
   }
