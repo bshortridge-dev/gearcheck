@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer'
-import cheerio from 'cheerio'
+import * as cheerio from 'cheerio'
 
 export async function fetchArchonData(className: string, classSpec: string) {
   const retryCount = 3 // Number of times to retry
