@@ -1,32 +1,45 @@
 import { NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
-import puppeteer from 'puppeteer'
+import { chromium } from 'playwright-core'
+import path from 'path'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
   return input.toLowerCase().replace(/\s+/g, '-')
 }
 
+export const config = {
+  runtime: 'edge',
+}
+
 export async function POST(req: Request) {
   const { className, classSpec } = await req.json()
 
+  const browserPath = path.join(
+    process.cwd(),
+    'node_modules',
+    '@playwright',
+    'browser-chromium',
+    'chromium',
+    'chrome-linux',
+    'chrome',
+  )
+
+  let browser
   try {
+    browser = await chromium.launch({
+      executablePath: browserPath,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    })
+    const context = await browser.newContext()
+    const page = await context.newPage()
+
     const url = `https://wowmeta.com/guides/mythic-plus/${transformToApiFormat(
       className,
     )}/${transformToApiFormat(classSpec)}`
-
     console.log('Scraping URL:', url)
 
-    const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      headless: true,
-    })
-
-    const page = await browser.newPage()
-    await page.goto(url)
-
-    // Wait for the content to load
-    await page.waitForSelector('table')
+    await page.goto(url, { waitUntil: 'networkidle' })
 
     const content = await page.content()
     const $ = cheerio.load(content)
@@ -81,16 +94,19 @@ export async function POST(req: Request) {
       })
       .filter(enchant => enchant !== null)
 
-    await browser.close()
-
     console.log('Final enchants data:', JSON.stringify(enchants, null, 2))
 
     return NextResponse.json({ enchants })
   } catch (error) {
     console.error('Error scraping enchant data:', error)
-    return NextResponse.json(
-      { error: 'Failed to scrape enchant data' },
-      { status: 500 },
-    )
+    let errorMessage = 'Failed to scrape enchant data'
+    if (error instanceof Error) {
+      errorMessage += ': ' + error.message
+    }
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
+  } finally {
+    if (browser) {
+      await browser.close()
+    }
   }
 }

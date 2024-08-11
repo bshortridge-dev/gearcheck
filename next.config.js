@@ -1,8 +1,16 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: [
-      "puppeteer-core",
-      "@sparticuz/chromium-min",
-    ],
+    runtime: "edge",
+  },
+  webpack: (config, { isServer, webpack }) => {
+    if (isServer) {
+      config.externals.push({
+        "playwright-core": "playwright-core",
+      });
+    }
+    return config;
   },
 };
+
+module.exports = nextConfig;

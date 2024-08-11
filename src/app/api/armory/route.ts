@@ -1,28 +1,55 @@
 import { NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
-import puppeteer from 'puppeteer'
+import { chromium } from 'playwright-core'
+import path from 'path'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
   return input.toLowerCase().replace(/\s+/g, '-')
 }
 
+export const config = {
+  runtime: 'edge',
+}
+
 export async function POST(req: Request) {
   const { characterName, realmName, region } = await req.json()
 
-  try {
-    const url = `https://worldofwarcraft.blizzard.com/en-us/character/${region}/${realmName}/${characterName}`
+  const browserPath = path.join(
+    process.cwd(),
+    'node_modules',
+    '@playwright',
+    'browser-chromium',
+    'chromium',
+    'chrome-linux',
+    'chrome',
+  )
 
-    const browser = await puppeteer.launch({
+  let browser
+  try {
+    browser = await chromium.launch({
+      executablePath: browserPath,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      headless: true,
     })
 
-    const page = await browser.newPage()
-    await page.goto(url)
+    const context = await browser.newContext()
+    const page = await context.newPage()
+
+    const url = `https://worldofwarcraft.blizzard.com/en-us/character/${region}/${realmName}/${characterName}`
+    console.log('Scraping URL:', url)
+
+    await page.goto(url, { waitUntil: 'networkidle' }).catch(error => {
+      throw new Error(`Failed to navigate to ${url}: ${error.message}`)
+    })
 
     // Wait for the content to load
-    await page.waitForSelector('.CharacterHeader-detail')
+    await page
+      .waitForSelector('.CharacterHeader-detail', { timeout: 10000 })
+      .catch(error => {
+        throw new Error(
+          `Selector '.CharacterHeader-detail' not found: ${error.message}`,
+        )
+      })
 
     const content = await page.content()
     const $ = cheerio.load(content)
@@ -127,7 +154,7 @@ export async function POST(req: Request) {
       item => item.slot !== 'Shirt' && item.slot !== 'Tabard',
     )
 
-    await browser.close()
+    console.log('Scraping completed successfully')
 
     return NextResponse.json({
       classSpec,
@@ -138,11 +165,18 @@ export async function POST(req: Request) {
       level,
       overallIlvl,
     })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error scraping character data:', error)
-    return NextResponse.json(
-      { error: 'Failed to scrape character data' },
-      { status: 500 },
-    )
+
+    let errorMessage = 'Failed to scrape character data'
+    if (error instanceof Error) {
+      errorMessage += ': ' + error.message
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
+  } finally {
+    if (browser) {
+      await browser.close()
+    }
   }
 }
