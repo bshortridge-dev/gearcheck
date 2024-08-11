@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
-import { chromium } from 'playwright-core'
-import path from 'path'
+import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium-min'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
@@ -15,31 +15,27 @@ export const config = {
 export async function POST(req: Request) {
   const { className, classSpec } = await req.json()
 
-  const browserPath = path.join(
-    process.cwd(),
-    'node_modules',
-    '@playwright',
-    'browser-chromium',
-    'chromium',
-    'chrome-linux',
-    'chrome',
-  )
+  // Specify the location of your self-hosted Chromium package
+  const executablePath =
+    'https://github.com/bshortridge-dev/gearcheck/blob/main/chromium-v116.0.0-pack.tar'
 
   let browser
   try {
-    browser = await chromium.launch({
-      executablePath: browserPath,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: executablePath,
+      headless: chromium.headless,
     })
-    const context = await browser.newContext()
-    const page = await context.newPage()
+
+    const page = await browser.newPage()
 
     const url = `https://wowmeta.com/guides/mythic-plus/${transformToApiFormat(
       className,
     )}/${transformToApiFormat(classSpec)}`
     console.log('Scraping URL:', url)
 
-    await page.goto(url, { waitUntil: 'networkidle' })
+    await page.goto(url, { waitUntil: 'networkidle0' })
 
     const content = await page.content()
     const $ = cheerio.load(content)
