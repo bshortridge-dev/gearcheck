@@ -8,24 +8,21 @@ const transformToApiFormat = (input: string): string => {
   return input.toLowerCase().replace(/\s+/g, '-')
 }
 
-export const config = {
-  runtime: 'edge',
-}
-
 export async function POST(req: Request) {
   const { className, classSpec } = await req.json()
 
-  // Specify the location of your self-hosted Chromium package
-  const executablePath =
-    'https://github.com/bshortridge-dev/gearcheck/blob/main/chromium-v116.0.0-pack.tar'
-
   let browser
   try {
-    browser = await puppeteer.launch({
+    console.log('Using remote Chromium')
+    console.log('Using remote Chromium')
+    const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath: executablePath,
+      executablePath: await chromium.executablePath(
+        'https://github.com/Sparticuz/chromium/releases/download/v110.0.1/chromium-v110.0.1-pack.tar',
+      ),
       headless: chromium.headless,
+      ignoreHTTPSErrors: true,
     })
 
     const page = await browser.newPage()
@@ -70,9 +67,8 @@ export async function POST(req: Request) {
           if (popularity > highestPopularity) {
             const iconElement = row.find('span.iconlarge ins')
             const backgroundImage = iconElement.css('background-image')
-            const iconUrl = backgroundImage
-              ? backgroundImage.replace(/^url$['"]?/, '').replace(/['"]?$$/, '')
-              : 'https://wow.zamimg.com/images/wow/icons/large/inv_misc_enchantedscroll.jpg'
+            const iconUrl =
+              'https://wow.zamimg.com/images/wow/icons/large/inv_misc_enchantedscroll.jpg'
 
             bestEnchant = {
               slot: `${slot} Enchant`,
@@ -102,7 +98,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: errorMessage }, { status: 500 })
   } finally {
     if (browser) {
-      await browser.close()
     }
   }
 }

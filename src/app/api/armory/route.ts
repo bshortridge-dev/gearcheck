@@ -1,44 +1,36 @@
 import { NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
-import { chromium } from 'playwright-core'
-import path from 'path'
+import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium-min'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
   return input.toLowerCase().replace(/\s+/g, '-')
 }
 
-export const config = {
-  runtime: 'edge',
-}
-
 export async function POST(req: Request) {
   const { characterName, realmName, region } = await req.json()
 
-  const browserPath = path.join(
-    process.cwd(),
-    'node_modules',
-    '@playwright',
-    'browser-chromium',
-    'chromium',
-    'chrome-linux',
-    'chrome',
-  )
-
   let browser
   try {
-    browser = await chromium.launch({
-      executablePath: browserPath,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    console.log('Using remote Chromium')
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(
+        'https://github.com/Sparticuz/chromium/releases/download/v110.0.1/chromium-v110.0.1-pack.tar',
+      ),
+      headless: chromium.headless,
+      ignoreHTTPSErrors: true,
     })
 
-    const context = await browser.newContext()
-    const page = await context.newPage()
+    const page = await browser.newPage()
+    console.log('page loaded')
 
     const url = `https://worldofwarcraft.blizzard.com/en-us/character/${region}/${realmName}/${characterName}`
     console.log('Scraping URL:', url)
 
-    await page.goto(url, { waitUntil: 'networkidle' }).catch(error => {
+    await page.goto(url, { waitUntil: 'networkidle0' }).catch(error => {
       throw new Error(`Failed to navigate to ${url}: ${error.message}`)
     })
 
@@ -176,7 +168,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: errorMessage }, { status: 500 })
   } finally {
     if (browser) {
-      await browser.close()
     }
   }
 }
