@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "vercel-build": "npx playwright install chromium && primsa prisma generate && next build"
+    "vercel-build": "npx playwright install-deps  && npx playwright install chromium && primsa prisma generate && next build"
   },
   "dependencies": {
     "@playwright/browser-chromium": "^1.46.0",
