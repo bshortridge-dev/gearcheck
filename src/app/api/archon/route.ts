@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import puppeteer from 'puppeteer'
-import cheerio from 'cheerio'
+import * as cheerio from 'cheerio'
 
 export async function POST(request: Request) {
   const { spec, class: characterClass } = await request.json()

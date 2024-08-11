@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import puppeteer from 'puppeteer'
-import cheerio from 'cheerio'
+import * as cheerio from 'cheerio'
 import { PrismaClient } from '@prisma/client'
 
 // Create a single PrismaClient instance
