@@ -152,7 +152,7 @@ export default function Page() {
   }, [isWowheadLoaded, loading])
 
   useEffect(() => {
-    if (characterData && isWowheadLoaded) {
+    if (characterData && isWowheadLoaded && enchantData && recommendedItems) {
       setTimeout(() => {
         refreshWowheadLinks()
       }, 500)
