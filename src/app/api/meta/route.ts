@@ -14,15 +14,13 @@ export async function POST(req: Request) {
   let browser
   try {
     console.log('Using remote Chromium')
-    console.log('Using remote Chromium')
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(
-        'https://github.com/Sparticuz/chromium/raw/master/bin/chromium.br',
+        'https://github.com/bshortridge-dev/gearcheck/raw/main/chromium-v126.0.0-pack.tar',
       ),
       headless: chromium.headless,
-      ignoreHTTPSErrors: true,
     })
 
     const page = await browser.newPage()
