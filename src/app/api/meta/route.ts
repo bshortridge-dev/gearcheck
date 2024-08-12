@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(
-        'https://github.com/bshortridge-dev/gearcheck/raw/main/chromium-v126.0.0-pack.tar',
+        'https://github.com/Sparticuz/chromium/raw/master/bin/chromium.br',
       ),
       headless: chromium.headless,
       ignoreHTTPSErrors: true,
