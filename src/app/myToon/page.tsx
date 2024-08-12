@@ -157,7 +157,7 @@ export default function Page() {
         refreshWowheadLinks()
       }, 500)
     }
-  }, [characterData, isWowheadLoaded])
+  }, [characterData, isWowheadLoaded, enchantData, recommendedItems])
 
   useEffect(() => {
     if (characterData && isWowheadLoaded) {
