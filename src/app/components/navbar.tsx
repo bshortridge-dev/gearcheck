@@ -4,11 +4,14 @@ export default async function Navbar() {
   return (
     <div className='navbar z-50 bg-base-300 max-w-screen h-14'>
       <div className='flex-1'>
-        <Link
-          href={'/'}
-          className='btn btn-ghost normal-case text-xl rounded-sm'
-        >
-          Gearcheck 🗸
+        <Link href={'/'}>
+          <img
+            src='./assets/gearcheck.png'
+            className='rounded-md transition-transform duration-200 ease-in-out transform active:scale-90'
+            alt='Gearcheck'
+            height={50}
+            width={180}
+          />
         </Link>
       </div>
       <div className='flex-none'>
