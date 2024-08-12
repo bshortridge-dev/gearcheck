@@ -91,6 +91,88 @@ export async function fetchArchonData(className: string, classSpec: string) {
   return gearCategories
 }
 
+export async function fetchEnchantData(className: string, classSpec: string) {
+  const retryCount = 3 // Number of times to retry
+
+  let retry = 0
+  let enchants: string | any[] = []
+
+  while (retry < retryCount) {
+    try {
+      const browser = await puppeteer.launch({
+        headless: false,
+        args: ['--disable-features=site-per-process'],
+      })
+
+      const page = await browser.newPage()
+      const url = `https://wowmeta.com/guides/mythic-plus/${className
+        .toLowerCase()
+        .replace(/\s+/g, '-')}/${classSpec.toLowerCase().replace(/\s+/g, '-')}`
+      await page.goto(url)
+
+      // Add a delay of 5 seconds before closing the browser
+
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      const html = await page.content()
+      await browser.close()
+      const $ = cheerio.load(html)
+
+      const enchantSlots = [
+        'Back',
+        'Chest',
+        'Wrist',
+        'Belt',
+        'Feet',
+        'Ring',
+        'Weapon',
+      ]
+      enchants = enchantSlots
+        .map(slot => {
+          const rows = $(`tr:contains("${slot} Enchant")`)
+
+          let bestEnchant = null
+          let highestPopularity = -1
+
+          rows.each((_, element) => {
+            const row = $(element)
+            const nameElement = row.find('a.wowheadLink')
+            const name = nameElement.text().trim()
+            const href = nameElement.attr('href')
+            const popularityText = row
+              .find('td:last-child div:first-child')
+              .text()
+              .trim()
+            const popularity = parseInt(popularityText) || 0
+            if (popularity > highestPopularity) {
+              const iconElement = row.find('span.iconlarge ins')
+              const backgroundImage = iconElement.css('background-image')
+              const iconUrl =
+                'https://wow.zamimg.com/images/wow/icons/large/inv_misc_enchantedscroll.jpg'
+              bestEnchant = {
+                slot: `${slot} Enchant`,
+                name,
+                href,
+                popularity: `${popularity}%`,
+                iconUrl,
+              }
+              highestPopularity = popularity
+            }
+          })
+          return bestEnchant
+        })
+        .filter(enchant => enchant !== null)
+      if (enchants.length > 0) {
+        break // Exit the loop if enchants is not empty
+      }
+      retry++
+    } catch (error) {
+      console.error('Error fetching enchant data:', error)
+      retry++
+    }
+  }
+
+  return enchants
+}
 // Fetches character data for the given class and spec from raider.io
 export async function fetchCharacters(classParam: string, specParam: string) {
   try {

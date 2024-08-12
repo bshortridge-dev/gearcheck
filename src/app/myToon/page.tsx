@@ -11,6 +11,7 @@ interface Item {
   level: number
   iconUrl: string
   enchantment: string | null
+  itemId: number
 }
 
 interface ArchonItem {
@@ -24,7 +25,6 @@ interface ArchonItem {
 interface CharacterData {
   classSpec: string
   className: string
-  charPic: string
   items: Item[]
   race: string
   level: string
@@ -42,12 +42,41 @@ interface Toast {
   type: 'info' | 'success' | 'warning' | 'error'
 }
 
-interface EnchantData {
-  slot: string
-  name: string
-  href: string
-  popularity: string
-  iconUrl: string | null
+declare global {
+  interface Window {
+    WH?: any
+    $WowheadPower?: {
+      refreshLinks?: () => void
+    }
+    whTooltips?: {
+      colorLinks: boolean
+      iconizeLinks: boolean
+      renameLinks: boolean
+      iconSize: string
+    }
+  }
+}
+
+const mapSlotToArchonGear = (slot: string): string => {
+  const slotMapping: { [key: string]: string } = {
+    'Main Hand': 'Main-Hand',
+    'Off Hand': 'Off-Hand',
+    'Trinket 1': 'Trinket',
+    'Trinket 2': 'Trinket',
+    'Ring 1': 'Rings',
+    'Ring 2': 'Rings',
+    Head: 'Head',
+    Neck: 'Neck',
+    Shoulder: 'Shoulders',
+    Back: 'Back',
+    Chest: 'Chest',
+    Wrist: 'Wrist',
+    Hands: 'Gloves',
+    Waist: 'Belt',
+    Legs: 'Legs',
+    Feet: 'Feet',
+  }
+  return slotMapping[slot] || slot
 }
 
 export default function Page() {
@@ -65,6 +94,7 @@ export default function Page() {
     realmName: '',
     region: 'North America',
   })
+
   const {
     register,
     handleSubmit,
@@ -119,7 +149,26 @@ export default function Page() {
         refreshWowheadLinks()
       }, 100)
     }
-  }, [isWowheadLoaded, loading, refreshWowheadLinks])
+  }, [isWowheadLoaded, loading])
+
+  useEffect(() => {
+    if (characterData && isWowheadLoaded) {
+      setTimeout(() => {
+        refreshWowheadLinks()
+      }, 500)
+    }
+  }, [characterData, isWowheadLoaded])
+
+  useEffect(() => {
+    if (characterData && isWowheadLoaded) {
+      const timer = setTimeout(() => {
+        if (window.$WowheadPower && window.$WowheadPower.refreshLinks) {
+          window.$WowheadPower.refreshLinks()
+        }
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [characterData, isWowheadLoaded])
 
   const transformToApiFormat = (input: string): string => {
     return input.toLowerCase().replace(/\s+/g, '-')
@@ -129,7 +178,14 @@ export default function Page() {
     setIsLoading(true)
     setErrorMessage('')
     setFormInputs(data)
+
+    // Clear existing data
+    setCharacterData(null)
+    setRecommendedItems([])
+    setEnchantData([])
+
     const formattedRealmName = data.realmName.replace(/\s+/g, '-').toLowerCase()
+
     const regionCode = {
       'North America': 'us',
       Europe: 'eu',
@@ -138,60 +194,94 @@ export default function Page() {
     }[data.region] as 'us' | 'eu' | 'tw' | 'kr'
 
     try {
-      const response = await fetch('https://gcheckapi.netlify.app/api/armory', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          characterName: data.characterName,
-          realmName: formattedRealmName,
-          region: regionCode,
-        }),
-      })
+      // First, we need to get an access token
+      const tokenResponse = await fetch('/api/blizz/') // You'll need to create this endpoint
+      const { access_token } = await tokenResponse.json()
 
-      if (!response.ok) {
+      // Now we can make the API calls to Blizzard
+      const characterResponse = await fetch(
+        `https://${regionCode}.api.blizzard.com/profile/wow/character/${formattedRealmName}/${data.characterName.toLowerCase()}/equipment?namespace=profile-${regionCode}&locale=en_US&access_token=${access_token}`,
+      )
+
+      if (!characterResponse.ok) {
         throw new Error('Failed to fetch character data')
       }
 
-      const characterData: CharacterData = await response.json()
-      setCharacterData(characterData)
+      const characterData: any = await characterResponse.json()
+
+      // Process the character data
+      const processedCharacterData: CharacterData = {
+        classSpec: '', // We need to make another API call to get this
+        className: '', // We need to make another API call to get this
+        items: characterData.equipped_items
+          .filter(
+            (item: { slot: { name: string } }) =>
+              item.slot.name !== 'Tabard' && item.slot.name !== 'Shirt',
+          )
+          .map((item: any) => ({
+            slot: mapSlotToArchonGear(item.slot.name),
+            name: item.name,
+            level: item.level.value,
+            iconUrl: `https://wow.zamimg.com/images/wow/icons/large/${item.media.key.href
+              .split('/')
+              .pop()}.jpg`,
+            enchantment: item.enchantments
+              ? item.enchantments[0].display_string
+              : null,
+            itemId: item.item.id,
+          })),
+        race: '', // We need to make another API call to get this
+        level: '', // We need to make another API call to get this
+        overallIlvl: null, // We need to calculate this
+      }
+
+      // Make additional API calls to get class, spec, race, and level
+      const characterDetailsResponse = await fetch(
+        `https://${regionCode}.api.blizzard.com/profile/wow/character/${formattedRealmName}/${data.characterName.toLowerCase()}?namespace=profile-${regionCode}&locale=en_US&access_token=${access_token}`,
+      )
+      const characterDetails = await characterDetailsResponse.json()
+
+      processedCharacterData.className = characterDetails.character_class.name
+      processedCharacterData.classSpec = characterDetails.active_spec.name
+      processedCharacterData.race = characterDetails.race.name
+      processedCharacterData.level = characterDetails.level.toString()
+
+      // Calculate overall item level
+      processedCharacterData.overallIlvl = Math.round(
+        processedCharacterData.items.reduce(
+          (sum, item) => sum + item.level,
+          0,
+        ) / processedCharacterData.items.length,
+      )
+      // Refresh Wowhead links after state update
+      setTimeout(() => {
+        refreshWowheadLinks()
+      }, 100)
+      setCharacterData(processedCharacterData)
       addToast('Character data fetched successfully', 'success')
 
-      const transformedClassName = transformToApiFormat(characterData.className)
-      const transformedClassSpec = transformToApiFormat(characterData.classSpec)
+      // Fetch recommended items and enchant data
+      const transformedClassName = transformToApiFormat(
+        processedCharacterData.className,
+      )
+      const transformedClassSpec = transformToApiFormat(
+        processedCharacterData.classSpec,
+      )
 
       const recommendedResponse = await fetch(
         `/api/getData?class=${transformedClassName}&spec=${transformedClassSpec}`,
       )
+
       if (recommendedResponse.ok) {
         const recommendedData = await recommendedResponse.json()
         setRecommendedItems(recommendedData.highestPopularityItems)
-        addToast('Recommended items fetched successfully', 'success')
+        setEnchantData(recommendedData.enchantData)
+        addToast(
+          'Recommended items and enchants fetched successfully',
+          'success',
+        )
       } else {
-        throw new Error('Failed to fetch recommended items')
-      }
-      // // Inside the try block of onSubmit, after fetching character and recommended item data
-      const enchantResponse = await fetch(
-        'https://gcheckapi.netlify.app/api/meta/',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            className: transformedClassName,
-            classSpec: transformedClassSpec,
-          }),
-        },
-      )
-
-      if (enchantResponse.ok) {
-        const enchantData = await enchantResponse.json()
-        setEnchantData(enchantData.enchants)
-        addToast('Enchant data fetched successfully', 'success')
-      } else {
-        throw new Error('Failed to fetch enchant data')
+        throw new Error('Failed to fetch recommended items and enchants')
       }
     } catch (error) {
       console.error('Error:', error)
@@ -207,15 +297,9 @@ export default function Page() {
   function capitalizeFirstLetter(string: string): string {
     return string.charAt(0).toUpperCase() + string.slice(1)
   }
-
   const mapSlotToCategory = (slot: string) => {
-    const slotMapping: { [key: string]: string } = {
-      Ring: 'Rings',
-      Trinket: 'Trinket',
-    }
-    return slotMapping[slot] || slot
+    return slot // Since we're now using the ArchonGear structure, we can return the slot directly
   }
-
   return (
     <div className='relative min-h-screen w-full bg-base-100 flex justify-center pt-20'>
       <Script
@@ -339,27 +423,23 @@ export default function Page() {
               )}
           </div>
           <div className='lg:col-span-1 flex items-center justify-center'>
-            {characterData && characterData.charPic ? (
-              <CenteredImage base64Image={characterData.charPic} />
-            ) : (
-              <div className='text-left text-sm bg-base-100 p-2 rounded-md'>
-                <p>
-                  Enter your character's name, realm, and choose your region.
-                  Gearcheck will load your currently equipped gear and compare
-                  it to our most popular item data and show you what you are
-                  currently missing.
-                  <br />
-                  <span className='font-semibold text-accent text-md text-left'>
-                    Note:
-                  </span>
-                  <br />
-                  Your currently equipped gear is read from the wow armory and
-                  possibly will not be current. The wow armory should update
-                  after each log-out so if you are currently logged in to the
-                  game log-out before using this tool.
-                </p>
-              </div>
-            )}
+            <div className='text-left text-sm bg-base-100 p-2 rounded-md'>
+              <p>
+                Enter your character's name, realm, and choose your region.
+                Gearcheck will load your currently equipped gear and compare it
+                to our most popular item data and show you what you are
+                currently missing.
+                <br />
+                <span className='font-semibold text-accent text-md text-left'>
+                  Note:
+                </span>
+                <br />
+                Your currently equipped gear is read from the wow armory and
+                possibly will not be current. The wow armory should update after
+                each log-out so if you are currently logged in to the game
+                log-out before using this tool.
+              </p>
+            </div>
             <div className='toast'>
               {toasts.map((toast, index) => (
                 <div key={index} className={`alert alert-${toast.type}`}>
@@ -390,22 +470,25 @@ export default function Page() {
                         (a, b) =>
                           parseFloat(b.popularity) - parseFloat(a.popularity),
                       )
-
                     return (
                       <div key={index} className='bg-base-300 p-2 rounded'>
                         <div className='flex items-center'>
-                          <img
-                            src={item.iconUrl}
-                            alt={item.name}
-                            className='w-12 h-12 mr-3 rounded-md border border-stone-700'
-                          />
                           <div>
                             <p className='text-sm font-semibold'>{item.slot}</p>
-                            <p className='text-xs'>{item.name}</p>
+                            <a
+                              href={`https://www.wowhead.com/item=${item.itemId}`}
+                              data-wowhead={`item=${item.itemId}`}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='text-xs hover:font-semibold hover:underline'
+                            >
+                              {item.name}
+                            </a>
                             <p className='text-xs'>Item Level: {item.level}</p>
                             {item.enchantment && (
                               <p className='text-xs text-green-500'>
-                                {item.enchantment}
+                                {item.enchantment.split('|')[0]}{' '}
+                                {/* This will display only the first part of the enchantment string */}
                               </p>
                             )}
                           </div>
@@ -421,11 +504,6 @@ export default function Page() {
                                   Recommended:
                                 </p>
                                 <div className='flex items-center'>
-                                  <img
-                                    src={recommendedItem.itemIcon}
-                                    alt={recommendedItem.itemName}
-                                    className='w-8 h-8 mr-2 rounded-md border border-stone-700'
-                                  />
                                   <div>
                                     <a
                                       href={recommendedItem.href}
@@ -461,48 +539,39 @@ export default function Page() {
                   <div className='mt-4 p-4 bg-base-200 rounded-box'>
                     {/* Existing item comparison JSX */}
 
-                    {/* New enchant data section */}
+                    {/* Updated enchant data section */}
+
                     <div className='mt-4'>
                       <h3 className='text-lg font-semibold mb-2'>
                         Recommended Enchants
                       </h3>
+
                       <div className='grid grid-cols-2 gap-4'>
-                        {enchantData
-                          .filter(
-                            (enchant, index, self) =>
-                              index ===
-                              self.findIndex(t => t.slot === enchant.slot),
-                          )
-                          .map((enchant, index) => (
-                            <div
-                              key={index}
-                              className='bg-base-300 p-2 rounded flex items-center'
-                            >
-                              {enchant.iconUrl && (
-                                <img
-                                  src={enchant.iconUrl}
-                                  alt={`${enchant.name} icon`}
-                                  className='w-12 h-12 mr-3 rounded-md border border-stone-700 object-cover'
-                                />
-                              )}
-                              <div>
-                                <p className='text-sm font-semibold'>
-                                  {enchant.slot}
-                                </p>
-                                <a
-                                  href={enchant.href}
-                                  target='_blank'
-                                  rel='noopener noreferrer'
-                                  className='text-xs hover:font-semibold hover:underline'
-                                >
-                                  {enchant.name.replace(/(.+)(\1)/, '$1')}
-                                </a>
-                                <p className='text-xs'>
-                                  Popularity: {enchant.popularity}
-                                </p>
-                              </div>
+                        {enchantData.map((enchant, index) => (
+                          <div
+                            key={index}
+                            className='bg-base-300 p-2 rounded flex items-center'
+                          >
+                            <div>
+                              <p className='text-sm font-semibold'>
+                                {enchant.slot}
+                              </p>
+
+                              <a
+                                href={enchant.href}
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='text-xs hover:font-semibold hover:underline'
+                              >
+                                {enchant.name}
+                              </a>
+
+                              <p className='text-xs'>
+                                Popularity: {enchant.popularity}
+                              </p>
                             </div>
-                          ))}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>

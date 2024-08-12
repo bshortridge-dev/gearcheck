@@ -21,76 +21,93 @@ export async function GET(request: Request) {
   const classSpec = transformParam(searchParams.get('spec'))
 
   try {
-    const [characters, archonData, whBestGear, rings, trinkets, allItems] =
-      await Promise.all([
-        prisma.character.findMany({
-          where: {
-            className: className,
-            classSpec: classSpec,
+    const [
+      characters,
+      archonData,
+      whBestGear,
+      rings,
+      trinkets,
+      allItems,
+      enchantData, // Add this line to fetch enchant data
+    ] = await Promise.all([
+      prisma.character.findMany({
+        where: {
+          className: className,
+          classSpec: classSpec,
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+        take: 3,
+      }),
+      prisma.archonGear.findMany({
+        where: {
+          className: className,
+          classSpec: classSpec,
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      }),
+      prisma.whBestGear.findMany({
+        where: {
+          className: className,
+          classSpec: classSpec,
+        },
+        orderBy: {
+          itemSlot: 'desc',
+        },
+      }),
+      // Fetch top 2 rings
+      prisma.archonGear.findMany({
+        where: {
+          className: className,
+          classSpec: classSpec,
+          categoryName: 'Rings', // Ensure this matches your database
+        },
+        orderBy: {
+          popularity: 'desc',
+        },
+        distinct: ['itemName'], // Ensure distinct items by name
+        take: 2,
+      }),
+      // Fetch top 2 trinkets
+      prisma.archonGear.findMany({
+        where: {
+          className: className,
+          classSpec: classSpec,
+          categoryName: 'Trinket', // Ensure this matches your database
+        },
+        orderBy: {
+          popularity: 'desc',
+        },
+        distinct: ['itemName'], // Ensure distinct items by name
+        take: 2,
+      }),
+      // Fetch all items for other categories
+      prisma.archonGear.findMany({
+        where: {
+          className: className,
+          classSpec: classSpec,
+          categoryName: {
+            notIn: ['Rings', 'Trinket'],
           },
-          orderBy: {
-            updatedAt: 'desc',
-          },
-          take: 3,
-        }),
-        prisma.archonGear.findMany({
-          where: {
-            className: className,
-            classSpec: classSpec,
-          },
-          orderBy: {
-            updatedAt: 'desc',
-          },
-        }),
-        prisma.whBestGear.findMany({
-          where: {
-            className: className,
-            classSpec: classSpec,
-          },
-          orderBy: {
-            itemSlot: 'desc',
-          },
-        }),
-        // Fetch top 2 rings
-        prisma.archonGear.findMany({
-          where: {
-            className: className,
-            classSpec: classSpec,
-            categoryName: 'Rings', // Ensure this matches your database
-          },
-          orderBy: {
-            popularity: 'desc',
-          },
-          distinct: ['itemName'], // Ensure distinct items by name
-          take: 2,
-        }),
-        // Fetch top 2 trinkets
-        prisma.archonGear.findMany({
-          where: {
-            className: className,
-            classSpec: classSpec,
-            categoryName: 'Trinket', // Ensure this matches your database
-          },
-          orderBy: {
-            popularity: 'desc',
-          },
-          distinct: ['itemName'], // Ensure distinct items by name
-          take: 2,
-        }),
-        // Fetch all items for other categories
-        prisma.archonGear.findMany({
-          where: {
-            className: className,
-            classSpec: classSpec,
-            categoryName: {
-              notIn: ['Rings', 'Trinket'],
-            },
-          },
-          orderBy: {
-            popularity: 'desc', // Ensure the most popular item is selected
-          },
-        }),
-      ])
+        },
+        orderBy: {
+          popularity: 'desc', // Ensure the most popular item is selected
+        },
+      }),
+      // Fetch enchant data
+      prisma.enchantData.findMany({
+        where: {
+          className: className,
+          classSpec: classSpec,
+        },
+        orderBy: {
+          popularity: 'desc',
+        },
+      }),
+    ])
 
     // Helper function to parse popularity
     const parsePopularity = (popularity: string): number => {
@@ -122,6 +139,7 @@ export async function GET(request: Request) {
       archonData,
       whBestGear,
       highestPopularityItems,
+      enchantData, // Include enchant data in the response
     })
   } catch (error) {
     console.error('Error fetching data:', error)

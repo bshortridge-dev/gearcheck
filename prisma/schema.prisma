@@ -17,6 +17,7 @@ model Character {
   classSpec      String  // Changed from 'spec'
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  @@unique([className, classSpec, name])
 }
 
 model ArchonGear {
@@ -31,6 +32,7 @@ model ArchonGear {
   classSpec      String  // Changed from 'spec'
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+    @@unique([className, classSpec, categoryName, itemName])
 }
 
 model whBestGear {
@@ -44,4 +46,19 @@ model whBestGear {
   classSpec     String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+    @@unique([className, classSpec, itemName])
+}
+
+model EnchantData {
+  id            Int      @id @default(autoincrement())
+  slot          String
+  name          String
+  href          String
+  popularity    String
+  iconUrl       String
+  className     String
+  classSpec     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+    @@unique([className, classSpec, slot, name])
 }

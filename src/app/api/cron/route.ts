@@ -1,18 +1,16 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { fetchArchonData, fetchCharacters } from '../../lib/dataFetchers'
+import {
+  fetchArchonData,
+  fetchCharacters,
+  fetchEnchantData,
+} from '../../lib/dataFetchers'
 
 const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic' // Force dynamic (server) route instead of static page
 
 export async function GET() {
   try {
-    // Drop all rows in the archonGear table
-    await prisma.archonGear.deleteMany()
-
-    // Drop all rows in the character table
-    await prisma.character.deleteMany()
-    // Fetch data for all class/spec combinations
     const classSpecs = [
       { class: 'warrior', spec: 'arms' },
       { class: 'warrior', spec: 'fury' },
@@ -53,55 +51,145 @@ export async function GET() {
       { class: 'mage', spec: 'fire' },
       { class: 'mage', spec: 'frost' },
       { class: 'mage', spec: 'arcane' },
-
-      // Add all other class/spec combinations
     ]
 
     for (const { class: classParam, spec: specParam } of classSpecs) {
       const archonData = await fetchArchonData(classParam, specParam)
       const characters = await fetchCharacters(classParam, specParam)
+      const enchantData = await fetchEnchantData(classParam, specParam)
       const className = classParam
       const classSpec = specParam
-      // Store Archon data
+
+      // Update or create Archon data
       for (const category of Object.values(archonData)) {
         for (const item of category.items) {
-          await prisma.archonGear.create({
-            data: {
+          await prisma.archonGear.upsert({
+            where: {
+              className_classSpec_categoryName_itemName: {
+                className,
+                classSpec,
+                categoryName: category.categoryName,
+                itemName: item.name,
+              },
+            },
+            update: {
+              href: item.href,
+              maxKey: item.maxKey,
+              popularity: item.popularity,
+              itemIcon: item.itemIcon,
+            },
+            create: {
+              className,
+              classSpec,
               categoryName: category.categoryName,
               itemName: item.name,
               href: item.href,
               maxKey: item.maxKey,
               popularity: item.popularity,
               itemIcon: item.itemIcon,
-              // @ts-ignore
-              className: className,
-              classSpec: classSpec,
             },
           })
         }
       }
 
-      // Store character data
+      // Delete outdated Archon data
+      const validItemNames = Object.values(archonData).flatMap(category =>
+        category.items.map((item: { name: any }) => item.name),
+      )
+      await prisma.archonGear.deleteMany({
+        where: {
+          className,
+          classSpec,
+          itemName: { notIn: validItemNames },
+        },
+      })
+
+      // Update or create character data
       if (characters) {
         for (const character of characters) {
-          await prisma.character.create({
-            data: {
+          await prisma.character.upsert({
+            where: {
+              className_classSpec_name: {
+                className,
+                classSpec,
+                name: character.name,
+              },
+            },
+            update: {
+              link: character.link,
+              charRealm: character.charRealm,
+              combinedData: character.combinedData,
+            },
+            create: {
+              className,
+              classSpec,
               name: character.name,
               link: character.link,
               charRealm: character.charRealm,
               combinedData: character.combinedData,
-              // @ts-ignore
-              className: className,
-              classSpec: classSpec,
             },
           })
         }
       }
+
+      // Delete outdated character data
+      const validCharacterNames = characters
+        ? characters.map(char => char.name)
+        : []
+      await prisma.character.deleteMany({
+        where: {
+          className,
+          classSpec,
+          name: { notIn: validCharacterNames },
+        },
+      })
+
+      // Update or create enchant data
+      if (enchantData) {
+        for (const enchant of enchantData) {
+          await prisma.enchantData.upsert({
+            where: {
+              className_classSpec_slot_name: {
+                className,
+                classSpec,
+                slot: enchant.slot,
+                name: enchant.name,
+              },
+            },
+            update: {
+              href: enchant.href,
+              popularity: enchant.popularity,
+              iconUrl: enchant.iconUrl,
+            },
+            create: {
+              className,
+              classSpec,
+              slot: enchant.slot,
+              name: enchant.name,
+              href: enchant.href,
+              popularity: enchant.popularity,
+              iconUrl: enchant.iconUrl,
+            },
+          })
+        }
+      }
+
+      // Delete outdated enchant data
+      const validEnchantNames = enchantData
+        ? enchantData.map(enchant => enchant.name)
+        : []
+      await prisma.enchantData.deleteMany({
+        where: {
+          className,
+          classSpec,
+          name: { notIn: validEnchantNames },
+        },
+      })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Cron job error:', error)
+    console.error('API error:', error)
     return NextResponse.json(
       { success: false, error: 'Internal Server Error' },
       { status: 500 },

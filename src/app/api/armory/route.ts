@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
-import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium-min'
+import puppeteer from 'puppeteer'
 
 // Utility function to transform class names and specs
 const transformToApiFormat = (input: string): string => {
@@ -13,19 +12,14 @@ export async function POST(req: Request) {
 
   let browser
   try {
-    console.log('Using remote Chromium')
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(
-        'https://storage.googleapis.com/gcchromium/chromium-v126.0.0-pack.tar',
-      ),
-      headless: chromium.headless,
+    console.log('Launching Puppeteer')
+    browser = await puppeteer.launch({
+      headless: true,
     })
-    console.log(chromium.executablePath)
+    console.log('Puppeteer launched successfully')
 
     const page = await browser.newPage()
-    console.log('page loaded')
+    console.log('New page created')
 
     const url = `https://worldofwarcraft.blizzard.com/en-us/character/${region}/${realmName}/${characterName}`
     console.log('Scraping URL:', url)
@@ -166,6 +160,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: errorMessage }, { status: 500 })
   } finally {
     if (browser) {
+      await browser.close()
+      console.log('Browser closed')
     }
   }
 }
