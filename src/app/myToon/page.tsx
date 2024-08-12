@@ -138,20 +138,17 @@ export default function Page() {
     }[data.region] as 'us' | 'eu' | 'tw' | 'kr'
 
     try {
-      const response = await fetch(
-        'https://checkapi-three.vercel.app/api/armory',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            characterName: data.characterName,
-            realmName: formattedRealmName,
-            region: regionCode,
-          }),
+      const response = await fetch('/api/armory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      )
+        body: JSON.stringify({
+          characterName: data.characterName,
+          realmName: formattedRealmName,
+          region: regionCode,
+        }),
+      })
 
       if (!response.ok) {
         throw new Error('Failed to fetch character data')
@@ -175,19 +172,16 @@ export default function Page() {
         throw new Error('Failed to fetch recommended items')
       }
       // // Inside the try block of onSubmit, after fetching character and recommended item data
-      const enchantResponse = await fetch(
-        'https://checkapi-three.vercel.app/api/meta/',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            className: transformedClassName,
-            classSpec: transformedClassSpec,
-          }),
+      const enchantResponse = await fetch('/api/meta/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      )
+        body: JSON.stringify({
+          className: transformedClassName,
+          classSpec: transformedClassSpec,
+        }),
+      })
 
       if (enchantResponse.ok) {
         const enchantData = await enchantResponse.json()
