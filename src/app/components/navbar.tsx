@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 export default async function Navbar() {
@@ -5,9 +6,9 @@ export default async function Navbar() {
     <div className='navbar z-50 bg-base-300 max-w-screen h-14'>
       <div className='flex-1'>
         <Link href={'/'}>
-          <img
-            src='./assets/gearcheck.png'
-            className='rounded-md transition-transform duration-200 ease-in-out transform active:scale-90'
+          <Image
+            src='/assets/gearcheck.png'
+            className='rounded-md transition-transform duration-200 ease-in-out transform active:scale-90 h-[50px] w-[180px]'
             alt='Gearcheck'
             height={50}
             width={180}
