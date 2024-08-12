@@ -30,9 +30,7 @@ export async function POST(req: Request) {
     const url = `https://worldofwarcraft.blizzard.com/en-us/character/${region}/${realmName}/${characterName}`
     console.log('Scraping URL:', url)
 
-    await page.goto(url, { waitUntil: 'networkidle0' }).catch(error => {
-      throw new Error(`Failed to navigate to ${url}: ${error.message}`)
-    })
+    await page.goto(url)
 
     // Wait for the content to load
     await page

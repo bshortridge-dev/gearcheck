@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     )}/${transformToApiFormat(classSpec)}`
     console.log('Scraping URL:', url)
 
-    await page.goto(url, { waitUntil: 'networkidle0' })
+    await page.goto(url)
 
     const content = await page.content()
     const $ = cheerio.load(content)
