@@ -138,7 +138,7 @@ export default function Page() {
     }[data.region] as 'us' | 'eu' | 'tw' | 'kr'
 
     try {
-      const response = await fetch('/api/armory', {
+      const response = await fetch('https://gcheckapi.netlify.app/api/armory', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -172,16 +172,19 @@ export default function Page() {
         throw new Error('Failed to fetch recommended items')
       }
       // // Inside the try block of onSubmit, after fetching character and recommended item data
-      const enchantResponse = await fetch('/api/meta/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const enchantResponse = await fetch(
+        'https://gcheckapi.netlify.app/api/meta/',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            className: transformedClassName,
+            classSpec: transformedClassSpec,
+          }),
         },
-        body: JSON.stringify({
-          className: transformedClassName,
-          classSpec: transformedClassSpec,
-        }),
-      })
+      )
 
       if (enchantResponse.ok) {
         const enchantData = await enchantResponse.json()
