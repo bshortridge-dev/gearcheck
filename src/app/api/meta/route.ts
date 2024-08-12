@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       ),
       headless: chromium.headless,
     })
-
+    console.log(chromium.executablePath)
     const page = await browser.newPage()
 
     const url = `https://wowmeta.com/guides/mythic-plus/${transformToApiFormat(

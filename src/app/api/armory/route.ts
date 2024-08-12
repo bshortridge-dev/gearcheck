@@ -22,6 +22,7 @@ export async function POST(req: Request) {
       ),
       headless: chromium.headless,
     })
+    console.log(chromium.executablePath)
 
     const page = await browser.newPage()
     console.log('page loaded')
