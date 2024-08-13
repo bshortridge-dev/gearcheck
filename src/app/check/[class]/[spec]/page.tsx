@@ -13,6 +13,13 @@ interface Character {
   combinedData: string
 }
 
+interface EnchantData {
+  slot: string
+  name: string
+  href: string
+  popularity: string
+}
+
 interface ArchonItem {
   categoryName: string
   itemName: string
@@ -59,6 +66,7 @@ const SpecPage = () => {
   const [whBestGear, setWhBestGear] = useState<WhBestGearItem[]>([])
   const [isWowheadLoaded, setIsWowheadLoaded] = useState(false)
   const wowheadInitialized = React.useRef(false)
+  const [enchantData, setEnchantData] = useState<EnchantData[]>([])
 
   const configureWowhead = () => {
     if (!wowheadInitialized.current) {
@@ -105,6 +113,7 @@ const SpecPage = () => {
         setCharacters(data.characters)
         setArchonData(data.archonData)
         setWhBestGear(data.whBestGear)
+        setEnchantData(data.enchantData) // Add this line
 
         // Refresh Wowhead links after state update
         setTimeout(() => {
@@ -121,12 +130,26 @@ const SpecPage = () => {
   }, [className, classSpec])
 
   useEffect(() => {
-    if (isWowheadLoaded && !loading) {
+    if (
+      isWowheadLoaded &&
+      enchantData &&
+      whBestGear &&
+      archonData &&
+      characters &&
+      !loading
+    ) {
       setTimeout(() => {
         refreshWowheadLinks()
-      }, 100)
+      }, 200)
     }
-  }, [isWowheadLoaded, loading])
+  }, [
+    isWowheadLoaded,
+    loading,
+    enchantData,
+    whBestGear,
+    archonData,
+    characters,
+  ])
 
   // Group archonData by categoryName
   const groupedArchonData = archonData.reduce((acc, item) => {
@@ -424,7 +447,75 @@ const SpecPage = () => {
               ))}
             </div>
           </div>
-
+          {/* Enchant data starts here */}
+          <div className='collapse collapse-arrow rounded-md bg-base-200 opacity-90 mb-2'>
+            <input type='checkbox' />
+            <div className='collapse-title text-xl font-medium'>
+              <h2 className='text-2xl font-bold mb-4'>
+                {`${classSpec
+                  .replace(/-/g, ' ')
+                  .split(' ')
+                  .map((word, index) => {
+                    if (index === 0) {
+                      return word.charAt(0).toUpperCase() + word.slice(1)
+                    } else if (index === 1) {
+                      return (
+                        word.charAt(0).toUpperCase() +
+                        word.slice(1).toLowerCase()
+                      )
+                    } else {
+                      return word
+                    }
+                  })
+                  .join(' ')} ${className
+                  .replace(/-/g, ' ')
+                  .split(' ')
+                  .map((word, index) => {
+                    if (index === 0) {
+                      return word.charAt(0).toUpperCase() + word.slice(1)
+                    } else if (index === 1) {
+                      return (
+                        word.charAt(0).toUpperCase() +
+                        word.slice(1).toLowerCase()
+                      )
+                    } else {
+                      return word
+                    }
+                  })
+                  .join(' ')} Recommended Enchants`}
+              </h2>
+            </div>
+            <div className='collapse-content'>
+              {loading && (
+                <span className='loading loading-dots loading-lg'></span>
+              )}
+              {!loading && (
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  {enchantData.map((enchant, index) => (
+                    <div
+                      key={index}
+                      className='bg-base-300 p-4 rounded-lg shadow'
+                    >
+                      <p className='text-lg font-semibold mb-2'>
+                        {enchant.slot}
+                      </p>
+                      <a
+                        href={enchant.href}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='text-sm hover:underline hover:font-semibold'
+                      >
+                        {enchant.name}
+                      </a>
+                      <p className='text-sm mt-2'>
+                        Popularity: {enchant.popularity}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
           {/* Raider.io data starts here */}
 
           <div className='collapse collapse-arrow rounded-md bg-base-200 opacity-90 mb-2'>
